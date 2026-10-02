@@ -1,156 +1,1128 @@
 <script lang="ts">
+  import { onMount } from "svelte";
   import { invoke } from "@tauri-apps/api/core";
 
-  let name = $state("");
-  let greetMsg = $state("");
+  type Platform =
+    | "steam"
+    | "epic"
+    | "gog"
+    | "humble"
+    | "itch"
+    | "ubisoft"
+    | "ea"
+    | "origin"
+    | "xbox"
+    | "amazon"
+    | "battle-net"
+    | "lutris"
+    | "geforce-now"
+    | "xcloud"
+    | "local";
 
-  async function greet(event: Event) {
-    event.preventDefault();
-    // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-    greetMsg = await invoke("greet", { name });
+  interface LaunchTarget {
+    kind: "uri" | "executable";
+  }
+
+  interface GameEntry {
+    id: string;
+    title: string;
+    platform: Platform;
+    installed: boolean;
+    install: LaunchTarget | null;
+    coverUrl: string | null;
+    heroUrl: string | null;
+    favorite: boolean;
+    hidden: boolean;
+    custom: boolean;
+  }
+
+  interface PlatformStatus {
+    platform: Platform;
+    gameCount: number;
+    error: string | null;
+  }
+
+  interface LibrarySnapshot {
+    games: GameEntry[];
+    platforms: PlatformStatus[];
+    scannedAt: number;
+  }
+
+  type Filter = "all" | "installed" | "favorites";
+
+  const platformNames: Record<Platform, string> = {
+    steam: "Steam",
+    epic: "Epic Games",
+    gog: "GOG",
+    humble: "Humble",
+    itch: "itch.io",
+    ubisoft: "Ubisoft Connect",
+    ea: "EA",
+    origin: "Origin",
+    xbox: "Xbox",
+    amazon: "Amazon Games",
+    "battle-net": "Battle.net",
+    lutris: "Lutris",
+    "geforce-now": "GeForce NOW",
+    xcloud: "Xbox Cloud Gaming",
+    local: "Local games",
+  };
+
+  const errorMessages: Record<string, string> = {
+    gameNotFound: "That game is no longer in your library. Rescan and try again.",
+    launchFailed: "The game action could not be started. Check that its official client is available.",
+    storage: "Your preference could not be saved.",
+  };
+
+  let snapshot = $state<LibrarySnapshot | null>(null);
+  let query = $state("");
+  let filter = $state<Filter>("all");
+  let loading = $state(true);
+  let refreshing = $state(false);
+  let loadError = $state("");
+  let actionError = $state("");
+  let notice = $state("");
+  let activeGameId = $state("");
+
+  let visibleGames = $derived.by(() => {
+    const games = snapshot?.games.filter((game) => !game.hidden) ?? [];
+    const normalizedQuery = query.trim().toLocaleLowerCase();
+
+    return games
+      .filter((game) => {
+        if (filter === "installed" && !game.installed) return false;
+        if (filter === "favorites" && !game.favorite) return false;
+        if (!normalizedQuery) return true;
+
+        return (
+          game.title.toLocaleLowerCase().includes(normalizedQuery) ||
+          platformNames[game.platform].toLocaleLowerCase().includes(normalizedQuery)
+        );
+      })
+      .sort((a, b) => a.title.localeCompare(b.title));
+  });
+
+  onMount(() => {
+    void loadLibrary();
+  });
+
+  async function loadLibrary(refresh = false) {
+    if (refreshing) return;
+    if (snapshot) {
+      refreshing = true;
+    } else {
+      loading = true;
+    }
+    loadError = "";
+    actionError = "";
+    notice = "";
+
+    try {
+      snapshot = await invoke<LibrarySnapshot>("get_library", { refresh });
+    } catch {
+      loadError = "Couldn't load your library. Try again from the desktop app.";
+    } finally {
+      loading = false;
+      refreshing = false;
+    }
+  }
+
+  async function runGameAction(game: GameEntry) {
+    const command = game.installed ? "launch_game" : game.install ? "install_game" : null;
+    if (!command || activeGameId) return;
+
+    activeGameId = game.id;
+    actionError = "";
+    notice = "";
+    try {
+      await invoke(command, { id: game.id });
+      notice =
+        command === "launch_game"
+          ? `Launch request sent for ${game.title}.`
+          : `Install request sent to ${platformNames[game.platform]}.`;
+    } catch (error) {
+      const code =
+        typeof error === "object" && error !== null && "code" in error
+          ? String(error.code)
+          : "";
+      actionError = errorMessages[code] ?? "The requested game action failed. Please try again.";
+    } finally {
+      activeGameId = "";
+    }
+  }
+
+  async function toggleFavorite(game: GameEntry) {
+    if (activeGameId) return;
+
+    activeGameId = game.id;
+    actionError = "";
+    notice = "";
+    try {
+      await invoke("set_favorite", { id: game.id, value: !game.favorite });
+      if (snapshot) {
+        snapshot = {
+          ...snapshot,
+          games: snapshot.games.map((entry) =>
+            entry.id === game.id ? { ...entry, favorite: !entry.favorite } : entry,
+          ),
+        };
+      }
+    } catch {
+      actionError = "Your favorite couldn't be saved. Please try again.";
+    } finally {
+      activeGameId = "";
+    }
+  }
+
+  function formatScanTime(seconds: number) {
+    if (!seconds) return "Not scanned yet";
+    return new Intl.DateTimeFormat(undefined, {
+      dateStyle: "medium",
+      timeStyle: "short",
+    }).format(new Date(seconds * 1000));
   }
 </script>
 
-<main class="container">
-  <h1>Welcome to Tauri + Svelte</h1>
+<svelte:head>
+  <title>Library · Universal Game Launcher</title>
+  <meta
+    name="description"
+    content="Browse and launch games from your installed store clients in one library."
+  />
+</svelte:head>
 
-  <div class="row">
-    <a href="https://vite.dev" target="_blank">
-      <img src="/vite.svg" class="logo vite" alt="Vite Logo" />
+<div class="app-shell">
+  <aside class="sidebar" aria-label="Main navigation">
+    <a class="brand" href="#library" aria-label="Universal Game Launcher home">
+      <span class="brand-mark" aria-hidden="true">U</span>
+      <span class="brand-name">universal<span>launcher</span></span>
     </a>
-    <a href="https://tauri.app" target="_blank">
-      <img src="/tauri.svg" class="logo tauri" alt="Tauri Logo" />
-    </a>
-    <a href="https://svelte.dev" target="_blank">
-      <img src="/svelte.svg" class="logo svelte-kit" alt="SvelteKit Logo" />
-    </a>
-  </div>
-  <p>Click on the Tauri, Vite, and SvelteKit logos to learn more.</p>
 
-  <form class="row" onsubmit={greet}>
-    <input id="greet-input" placeholder="Enter a name..." bind:value={name} />
-    <button type="submit">Greet</button>
-  </form>
-  <p>{greetMsg}</p>
-</main>
+    <div class="sidebar-label">Library</div>
+    <a class="nav-link active" href="#library" aria-current="page">
+      <span class="nav-icon" aria-hidden="true">▦</span>
+      All games
+    </a>
+    <button class="nav-link" onclick={() => (filter = "favorites")}>
+      <span class="nav-icon" aria-hidden="true">♡</span>
+      Favorites
+    </button>
+
+    <div class="sidebar-footer">
+      <span class="status-dot" aria-hidden="true"></span>
+      <span>Local library</span>
+    </div>
+  </aside>
+
+  <main id="library" class="main-content">
+    <header class="topbar">
+      <div class="breadcrumb">Your collection <span>/</span> Library</div>
+      <button
+        class="refresh-button"
+        onclick={() => loadLibrary(true)}
+        disabled={loading || refreshing}
+        aria-label={refreshing ? "Rescanning libraries" : "Rescan libraries"}
+      >
+        <span class:spinning={refreshing} aria-hidden="true">↻</span>
+        {refreshing ? "Scanning…" : "Rescan"}
+      </button>
+    </header>
+
+    <section class="page-heading" aria-labelledby="page-title">
+      <div>
+        <p class="eyebrow">YOUR GAMES, ALL TOGETHER</p>
+        <h1 id="page-title">Library</h1>
+        <p class="subtitle">
+          {#if snapshot}
+            {snapshot.games.filter((game) => !game.hidden).length} games ·
+            {snapshot.platforms.filter((platform) => platform.gameCount > 0).length} platforms
+          {:else}
+            Your games from every store, in one place.
+          {/if}
+        </p>
+      </div>
+      {#if snapshot}
+        <div class="last-scan">Last scan <strong>{formatScanTime(snapshot.scannedAt)}</strong></div>
+      {/if}
+    </section>
+
+    {#if snapshot}
+      {@const platformErrors = snapshot.platforms.filter((platform) => platform.error)}
+      {#if platformErrors.length > 0}
+        <div class="scan-warning" role="status">
+          <span aria-hidden="true">!</span>
+          Some libraries couldn't be scanned. Check that their store apps are installed and try again.
+        </div>
+      {/if}
+    {/if}
+
+    {#if actionError}
+      <div class="message error-message" role="alert">
+        {actionError}
+        <button class="message-dismiss" onclick={() => (actionError = "")} aria-label="Dismiss error">
+          ×
+        </button>
+      </div>
+    {/if}
+    {#if notice}
+      <div class="message success-message" role="status">
+        {notice}
+        <button class="message-dismiss" onclick={() => (notice = "")} aria-label="Dismiss message">
+          ×
+        </button>
+      </div>
+    {/if}
+
+    <section class="library-tools" aria-label="Library controls">
+      <label class="search-box">
+        <span aria-hidden="true">⌕</span>
+        <span class="visually-hidden">Search games</span>
+        <input bind:value={query} placeholder="Search your games…" type="search" />
+        {#if query}
+          <button class="clear-search" onclick={() => (query = "")} aria-label="Clear search">×</button>
+        {/if}
+      </label>
+      <div class="filter-tabs" aria-label="Filter games">
+        <button class:chosen={filter === "all"} aria-pressed={filter === "all"} onclick={() => (filter = "all")}>
+          All games
+        </button>
+        <button
+          class:chosen={filter === "installed"}
+          aria-pressed={filter === "installed"}
+          onclick={() => (filter = "installed")}
+        >
+          Installed
+        </button>
+        <button
+          class:chosen={filter === "favorites"}
+          aria-pressed={filter === "favorites"}
+          onclick={() => (filter = "favorites")}
+        >
+          Favorites
+        </button>
+      </div>
+    </section>
+
+    {#if loading}
+      <section class="loading-state" aria-live="polite">
+        <div class="loading-spinner" aria-hidden="true"></div>
+        <h2>Finding your games</h2>
+        <p>Checking your enabled libraries. This may take a moment.</p>
+      </section>
+    {:else if loadError}
+      <section class="empty-state" role="alert">
+        <div class="empty-icon" aria-hidden="true">↻</div>
+        <h2>Library unavailable</h2>
+        <p>{loadError}</p>
+        <button class="primary-button" onclick={() => loadLibrary()}>Try again</button>
+      </section>
+    {:else if visibleGames.length === 0}
+      <section class="empty-state">
+        <div class="empty-icon" aria-hidden="true">{snapshot?.games.length ? "⌕" : "▦"}</div>
+        {#if snapshot?.games.length}
+          <h2>No games match your filters</h2>
+          <p>Try a different search or filter, or rescan your libraries.</p>
+          <button
+            class="secondary-button"
+            onclick={() => {
+              query = "";
+              filter = "all";
+            }}>Clear filters</button
+          >
+        {:else}
+          <h2>Your library is ready for games</h2>
+          <p>
+            Install games with their official store apps, then rescan to find them here. You can also
+            add local games and cloud shortcuts from the app's settings.
+          </p>
+          <button class="secondary-button" onclick={() => loadLibrary(true)}>Rescan libraries</button>
+        {/if}
+      </section>
+    {:else}
+      <section class="game-grid" aria-label="Games">
+        {#each visibleGames as game (game.id)}
+          <article class="game-card">
+            <div class="cover-wrap">
+              {#if game.coverUrl || game.heroUrl}
+                <img
+                  class="cover-image"
+                  src={game.coverUrl ?? game.heroUrl ?? ""}
+                  alt=""
+                  loading="lazy"
+                />
+              {:else}
+                <div class="cover-placeholder" aria-hidden="true">
+                  <span>{game.title.slice(0, 1).toLocaleUpperCase()}</span>
+                </div>
+              {/if}
+              <span class:installed={game.installed} class="game-status">
+                {game.installed ? "Installed" : game.install ? "Not installed" : "Cloud"}
+              </span>
+              <button
+                class:favorite-active={game.favorite}
+                class="favorite-button"
+                onclick={() => toggleFavorite(game)}
+                disabled={activeGameId === game.id}
+                aria-label={game.favorite ? `Remove ${game.title} from favorites` : `Add ${game.title} to favorites`}
+                aria-pressed={game.favorite}
+              >
+                {game.favorite ? "♥" : "♡"}
+              </button>
+              <div class="cover-shade"></div>
+            </div>
+            <div class="game-info">
+              <div class="game-copy">
+                <h2 title={game.title}>{game.title}</h2>
+                <p>{platformNames[game.platform]}</p>
+              </div>
+              {#if game.installed || game.install}
+                <button
+                  class="game-action"
+                  onclick={() => runGameAction(game)}
+                  disabled={activeGameId === game.id}
+                  aria-label={`${game.installed ? "Launch" : "Install"} ${game.title}`}
+                >
+                  {#if activeGameId === game.id}
+                    <span class="small-spinner" aria-hidden="true"></span>
+                  {:else if game.installed}
+                    <span aria-hidden="true">▶</span>
+                  {:else}
+                    <span aria-hidden="true">↓</span>
+                  {/if}
+                </button>
+              {/if}
+            </div>
+          </article>
+        {/each}
+      </section>
+    {/if}
+
+    {#if snapshot && !loading && visibleGames.length > 0}
+      <p class="results-count">Showing {visibleGames.length} of {snapshot.games.filter((game) => !game.hidden).length} games</p>
+    {/if}
+  </main>
+</div>
 
 <style>
-.logo.vite:hover {
-  filter: drop-shadow(0 0 2em #747bff);
-}
-
-.logo.svelte-kit:hover {
-  filter: drop-shadow(0 0 2em #ff3e00);
-}
-
-:root {
-  font-family: Inter, Avenir, Helvetica, Arial, sans-serif;
-  font-size: 16px;
-  line-height: 24px;
-  font-weight: 400;
-
-  color: #0f0f0f;
-  background-color: #f6f6f6;
-
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  -webkit-text-size-adjust: 100%;
-}
-
-.container {
-  margin: 0;
-  padding-top: 10vh;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  text-align: center;
-}
-
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: 0.75s;
-}
-
-.logo.tauri:hover {
-  filter: drop-shadow(0 0 2em #24c8db);
-}
-
-.row {
-  display: flex;
-  justify-content: center;
-}
-
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-
-a:hover {
-  color: #535bf2;
-}
-
-h1 {
-  text-align: center;
-}
-
-input,
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  color: #0f0f0f;
-  background-color: #ffffff;
-  transition: border-color 0.25s;
-  box-shadow: 0 2px 2px rgba(0, 0, 0, 0.2);
-}
-
-button {
-  cursor: pointer;
-}
-
-button:hover {
-  border-color: #396cd8;
-}
-button:active {
-  border-color: #396cd8;
-  background-color: #e8e8e8;
-}
-
-input,
-button {
-  outline: none;
-}
-
-#greet-input {
-  margin-right: 5px;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    color: #f6f6f6;
-    background-color: #2f2f2f;
+  :global(*) {
+    box-sizing: border-box;
   }
 
-  a:hover {
-    color: #24c8db;
+  :global(html) {
+    min-width: 320px;
+    min-height: 100%;
+    background: #101114;
   }
 
-  input,
-  button {
-    color: #ffffff;
-    background-color: #0f0f0f98;
+  :global(body) {
+    margin: 0;
+    color: #f5f5f6;
+    font-family:
+      Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
   }
-  button:active {
-    background-color: #0f0f0f69;
-  }
-}
 
+  :global(button),
+  :global(input) {
+    font: inherit;
+  }
+
+  :global(button:focus-visible),
+  :global(a:focus-visible),
+  :global(input:focus-visible) {
+    outline: 2px solid #bafc54;
+    outline-offset: 3px;
+  }
+
+  .app-shell {
+    min-height: 100vh;
+  }
+
+  .sidebar {
+    position: fixed;
+    inset: 0 auto 0 0;
+    z-index: 2;
+    display: flex;
+    width: 232px;
+    flex-direction: column;
+    padding: 27px 18px 20px;
+    border-right: 1px solid #25262b;
+    background: #141518;
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    margin: 0 0 45px 5px;
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .brand-mark {
+    display: grid;
+    width: 35px;
+    height: 35px;
+    place-items: center;
+    border-radius: 11px;
+    background: #bafc54;
+    color: #141712;
+    font-size: 20px;
+    font-weight: 900;
+  }
+
+  .brand-name {
+    font-size: 13px;
+    font-weight: 750;
+    letter-spacing: -0.4px;
+  }
+
+  .brand-name span {
+    display: block;
+    color: #888990;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 1.8px;
+    text-transform: uppercase;
+  }
+
+  .sidebar-label {
+    margin: 0 10px 10px;
+    color: #777981;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.3px;
+    text-transform: uppercase;
+  }
+
+  .nav-link {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 4px;
+    padding: 11px 12px;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: #a8a9af;
+    cursor: pointer;
+    font-size: 13px;
+    text-align: left;
+    text-decoration: none;
+  }
+
+  .nav-link:hover,
+  .nav-link.active {
+    background: #222329;
+    color: #f8f8f9;
+  }
+
+  .nav-link.active {
+    box-shadow: inset 2px 0 #bafc54;
+  }
+
+  .nav-icon {
+    width: 18px;
+    color: #bafc54;
+    font-size: 18px;
+    line-height: 1;
+    text-align: center;
+  }
+
+  .sidebar-footer {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: auto;
+    padding: 13px 11px;
+    color: #96979e;
+    font-size: 12px;
+  }
+
+  .status-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #bafc54;
+    box-shadow: 0 0 9px #bafc5470;
+  }
+
+  .main-content {
+    width: min(100% - 232px, 1600px);
+    min-height: 100vh;
+    margin-left: 232px;
+    padding: 0 48px 48px;
+  }
+
+  .topbar {
+    display: flex;
+    height: 73px;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid #25262b;
+  }
+
+  .breadcrumb {
+    color: #8e9098;
+    font-size: 12px;
+  }
+
+  .breadcrumb span {
+    margin: 0 9px;
+    color: #4d4f56;
+  }
+
+  .refresh-button,
+  .secondary-button,
+  .primary-button {
+    display: inline-flex;
+    min-height: 37px;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 0 13px;
+    border: 1px solid #383a40;
+    border-radius: 7px;
+    background: #1d1f23;
+    color: #e7e8ea;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 650;
+    transition: background 140ms ease, border-color 140ms ease;
+  }
+
+  .refresh-button:hover,
+  .secondary-button:hover {
+    border-color: #5a5d65;
+    background: #27292e;
+  }
+
+  .refresh-button:disabled,
+  .game-action:disabled,
+  .favorite-button:disabled {
+    cursor: wait;
+    opacity: 0.65;
+  }
+
+  .refresh-button > span {
+    color: #bafc54;
+    font-size: 18px;
+    line-height: 1;
+  }
+
+  .spinning {
+    animation: spin 1s linear infinite;
+  }
+
+  .page-heading {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 20px;
+    margin: 43px 0 27px;
+  }
+
+  .eyebrow {
+    margin: 0 0 7px;
+    color: #bafc54;
+    font-size: 10px;
+    font-weight: 750;
+    letter-spacing: 1.65px;
+  }
+
+  h1 {
+    margin: 0;
+    font-size: clamp(30px, 4vw, 41px);
+    font-weight: 750;
+    letter-spacing: -1.9px;
+    line-height: 1.12;
+  }
+
+  .subtitle {
+    margin: 10px 0 0;
+    color: #93949b;
+    font-size: 13px;
+  }
+
+  .last-scan {
+    padding-bottom: 4px;
+    color: #81838a;
+    font-size: 11px;
+  }
+
+  .last-scan strong {
+    margin-left: 4px;
+    color: #bcbec3;
+    font-weight: 550;
+  }
+
+  .scan-warning,
+  .message {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0 0 18px;
+    padding: 11px 40px 11px 13px;
+    border: 1px solid #544225;
+    border-radius: 7px;
+    background: #292317;
+    color: #e7c77f;
+    font-size: 12px;
+  }
+
+  .scan-warning > span {
+    display: grid;
+    width: 19px;
+    height: 19px;
+    flex: 0 0 auto;
+    place-items: center;
+    border-radius: 50%;
+    background: #554321;
+    font-weight: 800;
+  }
+
+  .message {
+    justify-content: space-between;
+  }
+
+  .error-message {
+    border-color: #5d3435;
+    background: #2a1c1e;
+    color: #f0aaaa;
+  }
+
+  .success-message {
+    border-color: #38532a;
+    background: #1d291a;
+    color: #c8efa1;
+  }
+
+  .message-dismiss,
+  .clear-search {
+    border: 0;
+    background: none;
+    color: inherit;
+    cursor: pointer;
+    font-size: 20px;
+    line-height: 1;
+  }
+
+  .message-dismiss {
+    position: absolute;
+    top: 50%;
+    right: 11px;
+    transform: translateY(-50%);
+  }
+
+  .library-tools {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    margin-bottom: 22px;
+  }
+
+  .search-box {
+    display: flex;
+    width: min(100%, 350px);
+    height: 39px;
+    align-items: center;
+    gap: 9px;
+    padding: 0 11px;
+    border: 1px solid #303138;
+    border-radius: 7px;
+    background: #191a1e;
+    color: #85878e;
+  }
+
+  .search-box > span:not(.visually-hidden) {
+    font-size: 22px;
+    line-height: 1;
+  }
+
+  .search-box input {
+    width: 100%;
+    min-width: 0;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: #f3f3f5;
+    font-size: 12px;
+  }
+
+  .search-box input::placeholder {
+    color: #777981;
+  }
+
+  .clear-search {
+    color: #92939a;
+  }
+
+  .filter-tabs {
+    display: flex;
+    flex: 0 0 auto;
+    gap: 3px;
+    padding: 3px;
+    border: 1px solid #292a30;
+    border-radius: 8px;
+    background: #17181b;
+  }
+
+  .filter-tabs button {
+    padding: 6px 10px;
+    border: 0;
+    border-radius: 5px;
+    background: transparent;
+    color: #9799a0;
+    cursor: pointer;
+    font-size: 11px;
+  }
+
+  .filter-tabs button:hover {
+    color: #e8e9eb;
+  }
+
+  .filter-tabs button.chosen {
+    background: #303137;
+    color: #f8f8f9;
+  }
+
+  .game-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(178px, 1fr));
+    gap: 22px 17px;
+  }
+
+  .game-card {
+    min-width: 0;
+  }
+
+  .cover-wrap {
+    position: relative;
+    overflow: hidden;
+    aspect-ratio: 0.77;
+    border: 1px solid #2b2c32;
+    border-radius: 9px;
+    background: #202126;
+    isolation: isolate;
+  }
+
+  .cover-image,
+  .cover-placeholder,
+  .cover-shade {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  .cover-image {
+    z-index: -2;
+    object-fit: cover;
+    transition: transform 260ms ease;
+  }
+
+  .game-card:hover .cover-image {
+    transform: scale(1.04);
+  }
+
+  .cover-placeholder {
+    z-index: -2;
+    display: grid;
+    place-items: center;
+    background:
+      radial-gradient(ellipse at 50% 100%, #4a5737 0, transparent 50%),
+      linear-gradient(145deg, #353840, #1e2025 70%);
+  }
+
+  .cover-placeholder span {
+    color: #d4edb4;
+    font-size: 68px;
+    font-weight: 800;
+    opacity: 0.72;
+    text-shadow: 0 5px 20px #0008;
+  }
+
+  .cover-shade {
+    z-index: -1;
+    background: linear-gradient(180deg, #0007 0%, transparent 34%, transparent 62%, #000b 100%);
+    pointer-events: none;
+  }
+
+  .game-status {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    padding: 4px 7px;
+    border: 1px solid #ffffff24;
+    border-radius: 5px;
+    background: #141519c9;
+    color: #d1d2d6;
+    font-size: 9px;
+    font-weight: 650;
+    backdrop-filter: blur(7px);
+  }
+
+  .game-status.installed {
+    color: #d1f8a6;
+  }
+
+  .favorite-button {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    display: grid;
+    width: 30px;
+    height: 30px;
+    place-items: center;
+    border: 1px solid #ffffff24;
+    border-radius: 50%;
+    background: #141519c9;
+    color: #fff;
+    cursor: pointer;
+    font-size: 17px;
+    backdrop-filter: blur(7px);
+  }
+
+  .favorite-button:hover,
+  .favorite-button.favorite-active {
+    color: #ff7893;
+  }
+
+  .game-info {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 7px;
+    padding: 10px 1px 0;
+  }
+
+  .game-copy {
+    min-width: 0;
+  }
+
+  .game-copy h2 {
+    overflow: hidden;
+    margin: 0;
+    color: #e9e9eb;
+    font-size: 12px;
+    font-weight: 650;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .game-copy p {
+    overflow: hidden;
+    margin: 3px 0 0;
+    color: #85878e;
+    font-size: 10px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .game-action {
+    display: grid;
+    width: 31px;
+    height: 31px;
+    flex: 0 0 auto;
+    place-items: center;
+    border: 1px solid #bafc54;
+    border-radius: 8px;
+    background: #bafc54;
+    color: #171a13;
+    cursor: pointer;
+    font-size: 12px;
+    transition: background 140ms ease, transform 140ms ease;
+  }
+
+  .game-action:hover:not(:disabled) {
+    transform: translateY(-1px);
+    background: #d0ff88;
+  }
+
+  .small-spinner,
+  .loading-spinner {
+    display: block;
+    border: 2px solid #43464c;
+    border-top-color: #bafc54;
+    border-radius: 50%;
+    animation: spin 800ms linear infinite;
+  }
+
+  .small-spinner {
+    width: 14px;
+    height: 14px;
+  }
+
+  .loading-state,
+  .empty-state {
+    display: flex;
+    min-height: 330px;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 36px 20px;
+    text-align: center;
+  }
+
+  .loading-spinner {
+    width: 30px;
+    height: 30px;
+    margin-bottom: 19px;
+    border-width: 3px;
+  }
+
+  .loading-state h2,
+  .empty-state h2 {
+    margin: 0;
+    color: #e8e9eb;
+    font-size: 17px;
+    font-weight: 650;
+  }
+
+  .loading-state p,
+  .empty-state p {
+    max-width: 390px;
+    margin: 8px 0 18px;
+    color: #92949b;
+    font-size: 12px;
+  }
+
+  .empty-icon {
+    display: grid;
+    width: 56px;
+    height: 56px;
+    place-items: center;
+    margin-bottom: 18px;
+    border: 1px solid #34363c;
+    border-radius: 17px;
+    background: #1d1f23;
+    color: #bafc54;
+    font-size: 27px;
+  }
+
+  .primary-button {
+    border-color: #bafc54;
+    background: #bafc54;
+    color: #171a13;
+  }
+
+  .primary-button:hover {
+    background: #d0ff88;
+  }
+
+  .results-count {
+    margin: 25px 0 0;
+    color: #777981;
+    font-size: 10px;
+    text-align: center;
+  }
+
+  .visually-hidden {
+    position: absolute;
+    overflow: hidden;
+    width: 1px;
+    height: 1px;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    clip-path: inset(50%);
+  }
+
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  @media (max-width: 950px) {
+    .main-content {
+      padding-right: 30px;
+      padding-left: 30px;
+    }
+
+    .game-grid {
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 19px 13px;
+    }
+  }
+
+  @media (max-width: 680px) {
+    .sidebar {
+      position: static;
+      width: 100%;
+      height: 61px;
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 17px;
+      border-right: 0;
+      border-bottom: 1px solid #25262b;
+    }
+
+    .brand {
+      margin: 0;
+    }
+
+    .brand-mark {
+      width: 32px;
+      height: 32px;
+    }
+
+    .sidebar-label,
+    .sidebar-footer,
+    .nav-link:not(.active) {
+      display: none;
+    }
+
+    .nav-link.active {
+      width: auto;
+      padding: 8px 10px;
+      box-shadow: none;
+      font-size: 11px;
+    }
+
+    .main-content {
+      width: 100%;
+      margin: 0;
+      padding: 0 18px 34px;
+    }
+
+    .topbar {
+      height: 57px;
+    }
+
+    .page-heading {
+      align-items: flex-start;
+      flex-direction: column;
+      gap: 9px;
+      margin: 30px 0 21px;
+    }
+
+    .last-scan {
+      padding: 0;
+    }
+
+    .library-tools {
+      align-items: stretch;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .search-box {
+      width: 100%;
+    }
+
+    .filter-tabs {
+      align-self: flex-start;
+    }
+
+    .game-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px 12px;
+    }
+  }
 </style>
