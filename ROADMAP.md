@@ -26,7 +26,7 @@ This roadmap describes intended work; it is **not** a claim that the user interf
 - **Personal library:** added favorite and hide/unhide actions; add/remove local executable and cloud shortcut entries; open available install folders.
 - **Preferences:** configure enabled libraries and minimize-on-launch; choose opt-in metadata providers and save provider credentials without retrieving secret values.
 - **Metadata provider transition:** IGDB is used instead of RAWG. New settings do not offer RAWG, legacy saved RAWG selections are discarded when settings load/sanitize, and a legacy RAWG enum value cannot trigger a network request.
-- **Regression checks:** frontend tests cover startup loading, filters, and action eligibility. Backend tests cover provider parsing, secure key status, and RAWG request retirement.
+- **Regression checks:** frontend tests cover startup loading, filters, and action eligibility. Backend test cases cover provider parsing, secure key status, and RAWG request retirement; see [TODO.md](TODO.md) for current execution status.
 
 ## ✅ Later — prepare for release
 

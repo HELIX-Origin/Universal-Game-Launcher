@@ -24,6 +24,7 @@ Use the [roadmap](ROADMAP.md) for broader milestones and [BUGS.md](BUGS.md) for 
 
 - [ ] Run frontend `npm test`, `npm run check`, and `npm run build`, plus backend `cargo test`, after metadata integration.
 - [ ] Verify metadata providers and credentials in the desktop app without using real credentials in logs or fixtures.
+- [ ] Record execution of the RAWG-retirement and legacy-settings migration tests in [BUGS.md](BUGS.md).
 - [ ] Validate scanners and launch actions on actual supported operating-system/client combinations; record reproducible issues in [BUGS.md](BUGS.md).
 - [ ] Keep [README.md](README.md), [ROADMAP.md](ROADMAP.md), [BUGS.md](BUGS.md), and this checklist aligned with verified behavior.
 
