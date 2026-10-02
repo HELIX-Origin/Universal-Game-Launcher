@@ -1,54 +1,14 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import { invoke } from "@tauri-apps/api/core";
-
-  type Platform =
-    | "steam"
-    | "epic"
-    | "gog"
-    | "humble"
-    | "itch"
-    | "ubisoft"
-    | "ea"
-    | "origin"
-    | "xbox"
-    | "amazon"
-    | "battle-net"
-    | "lutris"
-    | "geforce-now"
-    | "xcloud"
-    | "local";
-
-  interface LaunchTarget {
-    kind: "uri" | "executable";
-  }
-
-  interface GameEntry {
-    id: string;
-    title: string;
-    platform: Platform;
-    installed: boolean;
-    install: LaunchTarget | null;
-    coverUrl: string | null;
-    heroUrl: string | null;
-    favorite: boolean;
-    hidden: boolean;
-    custom: boolean;
-  }
-
-  interface PlatformStatus {
-    platform: Platform;
-    gameCount: number;
-    error: string | null;
-  }
-
-  interface LibrarySnapshot {
-    games: GameEntry[];
-    platforms: PlatformStatus[];
-    scannedAt: number;
-  }
-
-  type Filter = "all" | "installed" | "favorites";
+  import {
+    filterLibraryGames,
+    gameActionCommand,
+    type GameEntry,
+    type LibrarySnapshot,
+    type Platform,
+    type Filter,
+  } from "$lib/library";
 
   const platformNames: Record<Platform, string> = {
     steam: "Steam",
@@ -84,23 +44,9 @@
   let notice = $state("");
   let activeGameId = $state("");
 
-  let visibleGames = $derived.by(() => {
-    const games = snapshot?.games.filter((game) => !game.hidden) ?? [];
-    const normalizedQuery = query.trim().toLocaleLowerCase();
-
-    return games
-      .filter((game) => {
-        if (filter === "installed" && !game.installed) return false;
-        if (filter === "favorites" && !game.favorite) return false;
-        if (!normalizedQuery) return true;
-
-        return (
-          game.title.toLocaleLowerCase().includes(normalizedQuery) ||
-          platformNames[game.platform].toLocaleLowerCase().includes(normalizedQuery)
-        );
-      })
-      .sort((a, b) => a.title.localeCompare(b.title));
-  });
+  let visibleGames = $derived(
+    filterLibraryGames(snapshot?.games ?? [], query, filter, platformNames),
+  );
 
   onMount(() => {
     void loadLibrary();
@@ -128,7 +74,7 @@
   }
 
   async function runGameAction(game: GameEntry) {
-    const command = game.installed ? "launch_game" : game.install ? "install_game" : null;
+    const command = gameActionCommand(game);
     if (!command || activeGameId) return;
 
     activeGameId = game.id;

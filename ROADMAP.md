@@ -7,6 +7,7 @@ This roadmap describes intended work; it is **not** a claim that the user interf
 - [x] Replace the starter page with a library view powered by `get_library`.
 - [x] Add understandable loading, empty, refresh, and command-error states.
 - [x] Connect launch and install actions only when an entry supports the action; surface failures.
+- [x] Add frontend regression coverage for initial loading state and library filtering/action eligibility.
 - [ ] Smoke-test the desktop UI and launch/install handoffs on supported operating systems with locally installed store clients. Record what was actually tested.
 
 ## 🧩 Next — personal library and settings

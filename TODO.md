@@ -8,7 +8,8 @@ Use the [roadmap](ROADMAP.md) for broader milestones and [BUGS.md](BUGS.md) for 
 - [x] Provide loading, empty, refresh, and command-error states; resolve B-01 and B-02 in [BUGS.md](BUGS.md).
 - [x] Connect launch and install actions only when the game entry supports them.
 - [ ] Smoke-test launch/install handoffs to official clients on supported operating systems.
-- [ ] Add regression coverage for the frontend/backend command boundary and initial library state.
+- [x] Add frontend regression coverage for the initial loading state, library filters, and action eligibility.
+- [ ] Smoke-test Tauri command invocation and launch/install handoffs to official clients on supported operating systems.
 
 ## ⚙️ Personal library and settings
 

@@ -34,6 +34,7 @@ Install Node.js/npm, Rust (at least version 1.85), and the [Tauri 2 system prere
 ```sh
 npm ci
 npm run check
+npm test
 npm run build
 npm run tauri dev
 ```
@@ -41,12 +42,13 @@ npm run tauri dev
 ### 🔍 What the checks cover
 
 - `npm run check` checks the frontend types.
+- `npm test` runs the frontend library behavior and initial-state regression tests.
 - `npm run build` packages the web frontend; it does not package the desktop application.
 - `npm run tauri dev` starts the desktop application and requires the Tauri system prerequisites.
 - To test the Rust backend, run `cargo test` from `src-tauri/`.
 - To package the desktop application, run `npm run tauri build`.
 
-There is currently no frontend test script. Report commands that could not run instead of treating them as successful.
+Frontend unit tests do not replace a desktop smoke test. Report commands that could not run instead of treating them as successful.
 
 ## 🚀 Continuing development
 
