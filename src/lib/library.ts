@@ -28,9 +28,23 @@ export interface GameEntry {
   coverUrl: string | null;
   heroUrl: string | null;
   installDir: string | null;
+  metadata: GameMetadata | null;
   favorite: boolean;
   hidden: boolean;
   custom: boolean;
+}
+
+export interface GameMetadata {
+  description: string | null;
+  developer: string | null;
+  publisher: string | null;
+  releaseDate: string | null;
+  genres: string[];
+  rating: number | null;
+  coverUrl: string | null;
+  heroUrl: string | null;
+  sources: string[];
+  fetchedAt: number;
 }
 
 export interface PlatformStatus {

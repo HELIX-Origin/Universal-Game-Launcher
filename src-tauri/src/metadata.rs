@@ -30,17 +30,16 @@ pub enum MetadataProvider {
     Igdb,
     /// The Visual Novel Database. Token optional.
     Vndb,
-    /// RAWG video game database. Requires a RAWG API key.
+    /// Legacy persisted value; discontinued and never queried.
     Rawg,
 }
 
 impl MetadataProvider {
-    pub const ALL: [MetadataProvider; 5] = [
+    pub const ALL: [MetadataProvider; 4] = [
         MetadataProvider::SteamGridDb,
         MetadataProvider::SteamStore,
         MetadataProvider::Igdb,
         MetadataProvider::Vndb,
-        MetadataProvider::Rawg,
     ];
 }
 
@@ -370,23 +369,6 @@ pub fn parse_vndb(v: &Value, title: &str) -> GameMetadata {
     }
 }
 
-pub fn parse_rawg_search(v: &Value, title: &str) -> Option<u64> {
-    best_match(v["results"].as_array()?, title, "name")?["id"].as_u64()
-}
-
-pub fn parse_rawg_details(g: &Value) -> GameMetadata {
-    GameMetadata {
-        description: s(&g["description_raw"]).map(|d| plain_text(&d)),
-        developer: names(&g["developers"], "name").into_iter().next(),
-        publisher: names(&g["publishers"], "name").into_iter().next(),
-        release_date: s(&g["released"]),
-        genres: names(&g["genres"], "name"),
-        rating: g["metacritic"].as_f64().map(|r| r as f32),
-        hero_url: https(&g["background_image"]),
-        ..Default::default()
-    }
-}
-
 /// Days-since-epoch → `YYYY-MM-DD` (civil-from-days, Howard Hinnant).
 fn unix_to_ymd(secs: i64) -> String {
     let z = secs.div_euclid(86_400) + 719_468;
@@ -571,26 +553,6 @@ fn fetch_vndb(a: &ureq::Agent, game: &Game, keys: &ApiKeys) -> AppResult<GameMet
     Ok(parse_vndb(&read_json(r)?, &game.title))
 }
 
-fn fetch_rawg(a: &ureq::Agent, game: &Game, keys: &ApiKeys) -> AppResult<GameMetadata> {
-    let k = key(&keys.rawg).ok_or_else(|| missing_key("rawg"))?;
-    let r = a
-        .get("https://api.rawg.io/api/games")
-        .query("key", k)
-        .query("search", &game.title)
-        .query("page_size", "10")
-        .call()
-        .map_err(req_err)?;
-    let Some(id) = parse_rawg_search(&read_json(r)?, &game.title) else {
-        return Ok(GameMetadata::default());
-    };
-    let r = a
-        .get(format!("https://api.rawg.io/api/games/{id}"))
-        .query("key", k)
-        .call()
-        .map_err(req_err)?;
-    Ok(parse_rawg_details(&read_json(r)?))
-}
-
 /// Query the enabled providers in order and merge the results.
 pub fn fetch(
     game: &Game,
@@ -611,7 +573,10 @@ pub fn fetch(
             MetadataProvider::SteamGridDb => fetch_sgdb(&a, game, keys),
             MetadataProvider::Igdb => fetch_igdb(&a, game, keys),
             MetadataProvider::Vndb => fetch_vndb(&a, game, keys),
-            MetadataProvider::Rawg => fetch_rawg(&a, game, keys),
+            MetadataProvider::Rawg => Err(AppError::with(
+                ErrorCode::MetadataRequestFailed,
+                "RAWG is discontinued; use IGDB or another enabled provider",
+            )),
         };
         match result {
             Ok(m) => merged.fill_from(m, p),
@@ -731,24 +696,13 @@ mod tests {
     }
 
     #[test]
-    fn vndb_and_rawg_parsers() {
+    fn vndb_parser() {
         let vn = json!({"results": [{"title": "Steins;Gate", "description": "[b]Time[/b] travel\n\nPart two", "released": "2009-10-15",
             "rating": 89.2, "image": {"url": "https://t.vndb.org/cv/1.jpg"}, "developers": [{"name": "5pb."}], "tags": [{"name": "Sci-fi"}]}]});
         let m = parse_vndb(&vn, "Steins;Gate");
         assert_eq!(m.description.as_deref(), Some("Time travel\n\nPart two"));
         assert_eq!(m.developer.as_deref(), Some("5pb."));
 
-        assert_eq!(
-            parse_rawg_search(&json!({"results": [{"id": 3, "name": "Doom"}]}), "DOOM"),
-            Some(3)
-        );
-        let d = parse_rawg_details(
-            &json!({"description_raw": "Rip and tear", "released": "2016-05-13", "metacritic": 85,
-            "developers": [{"name": "id Software"}], "publishers": [{"name": "Bethesda"}], "genres": [{"name": "Shooter"}],
-            "background_image": "https://media.rawg.io/a.jpg"}),
-        );
-        assert_eq!(d.publisher.as_deref(), Some("Bethesda"));
-        assert_eq!(d.hero_url.as_deref(), Some("https://media.rawg.io/a.jpg"));
     }
 
     #[test]
@@ -805,7 +759,6 @@ mod tests {
         for p in [
             MetadataProvider::SteamGridDb,
             MetadataProvider::Igdb,
-            MetadataProvider::Rawg,
         ] {
             assert_eq!(
                 fetch(&g, &[p], &ApiKeys::default(), "en", 0)
@@ -814,6 +767,29 @@ mod tests {
                 ErrorCode::MetadataMissingKey
             );
         }
+    }
+
+    #[test]
+    fn legacy_rawg_provider_never_makes_a_request() {
+        let game = Game::new(
+            Platform::Local,
+            "x",
+            "X",
+            crate::models::LaunchTarget::uri("https://x"),
+        );
+        let error = fetch(
+            &game,
+            &[MetadataProvider::Rawg],
+            &ApiKeys::default(),
+            "en",
+            0,
+        )
+        .unwrap_err();
+        assert_eq!(error.code, ErrorCode::MetadataRequestFailed);
+        assert_eq!(
+            error.detail.as_deref(),
+            Some("RAWG is discontinued; use IGDB or another enabled provider")
+        );
     }
 
     #[test]

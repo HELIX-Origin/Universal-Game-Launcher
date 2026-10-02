@@ -14,14 +14,24 @@ This roadmap describes intended work; it is **not** a claim that the user interf
 
 - [x] Surface favorite and hidden-game management in the library using existing backend commands.
 - [x] Add/remove local games and cloud shortcuts, open available install folders, and edit enabled libraries/minimize-on-launch settings.
-- [ ] Add settings for optional metadata providers and API-key status.
+- [x] Let users opt into metadata providers, store credentials write-only, and request game details.
+- [x] Retire RAWG network requests and remove legacy RAWG selections from settings while retaining stored enum/key fields for backward-compatible reads.
+- [ ] Verify provider requests, key saving/status, and metadata rendering from the running desktop app.
 - Keep third-party credentials optional: browsing the local library must not depend on them.
 - Connect the existing English message catalog to the UI. Add translated dictionaries only when the UI can select and use them.
+
+## 📚 Delivered milestones and records
+
+- **Initial library:** replaced starter content with `get_library` loading, refresh, empty/error states, search and filters; connected supported launch/install actions.
+- **Personal library:** added favorite and hide/unhide actions; add/remove local executable and cloud shortcut entries; open available install folders.
+- **Preferences:** configure enabled libraries and minimize-on-launch; choose opt-in metadata providers and save provider credentials without retrieving secret values.
+- **Metadata provider transition:** IGDB is used instead of RAWG. New settings do not offer RAWG, legacy saved RAWG selections are discarded when settings load/sanitize, and a legacy RAWG enum value cannot trigger a network request.
+- **Regression checks:** frontend tests cover startup loading, filters, and action eligibility. Backend tests cover provider parsing, secure key status, and RAWG request retirement.
 
 ## ✅ Later — prepare for release
 
 - Exercise scanning, persistence, and launch flows against real client data on each target operating system.
-- Add regression tests for reported defects and important frontend/backend command boundaries.
+- Expand regression tests for settings, metadata provider opt-in, credentials, and important frontend/backend command boundaries.
 - Review accessibility, privacy, error handling, installer packaging, and documentation before describing the project as release-ready.
 
 ## 🔄 Keeping this roadmap current

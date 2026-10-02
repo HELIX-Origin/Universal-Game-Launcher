@@ -75,7 +75,8 @@ impl Settings {
             self.locale = None;
         }
         let mut seen = BTreeSet::new();
-        self.metadata_providers.retain(|p| seen.insert(*p));
+        self.metadata_providers
+            .retain(|p| *p != MetadataProvider::Rawg && seen.insert(*p));
         self
     }
 }
@@ -272,7 +273,10 @@ impl UserData {
     pub fn load(path: &Path) -> UserData {
         match fs::read_to_string(path) {
             Ok(text) => match serde_json::from_str::<UserData>(&text) {
-                Ok(data) => data,
+                Ok(mut data) => {
+                    data.settings = data.settings.sanitized();
+                    data
+                }
                 Err(e) => {
                     log::warn!("corrupt user data at {}: {e}", path.display());
                     let _ = fs::copy(path, path.with_extension("json.bak"));
@@ -453,6 +457,26 @@ mod tests {
             data.custom_games.is_empty() && data.favorites.is_empty() && data.play_count.is_empty()
         );
         assert!(!data.remove_custom(&id));
+    }
+
+    #[test]
+    fn loading_legacy_rawg_settings_preserves_other_data_and_disables_rawg() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join(DATA_FILE);
+        fs::write(
+            &path,
+            serde_json::to_vec(&serde_json::json!({
+                "settings": { "metadataProviders": ["rawg", "igdb"] }
+            }))
+            .unwrap(),
+        )
+        .unwrap();
+
+        let data = UserData::load(&path);
+        assert_eq!(
+            data.settings.metadata_providers,
+            [MetadataProvider::Igdb]
+        );
     }
 
     #[test]

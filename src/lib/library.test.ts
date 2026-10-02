@@ -33,6 +33,7 @@ function game(
     coverUrl: null,
     heroUrl: null,
     installDir: null,
+    metadata: null,
     favorite: false,
     hidden: false,
     custom: false,

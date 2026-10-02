@@ -6,6 +6,7 @@
     filterLibraryGames,
     gameActionCommand,
     type GameEntry,
+    type GameMetadata,
     type LibrarySnapshot,
     type Platform,
     type Filter,
@@ -21,8 +22,25 @@
       metadataProviders: string[];
     }
 
+    interface ApiKeyStatus {
+      steamgriddb: boolean;
+      igdbClientId: boolean;
+      igdbClientSecret: boolean;
+      vndb: boolean;
+      rawg: boolean;
+    }
+
+    type ApiKeyField = "steamgriddb" | "igdbClientId" | "igdbClientSecret" | "vndb";
+
     type CustomPlatform = "local" | "geforce-now" | "xcloud";
     type Dialog = "add" | "settings" | null;
+
+    const metadataProviders = [
+      { id: "steamGridDb", name: "SteamGridDB", hint: "Artwork, requires an API key.", keyRequired: true },
+      { id: "steamStore", name: "Steam Store", hint: "Descriptions and release information; no key required.", keyRequired: false },
+      { id: "igdb", name: "IGDB", hint: "Game information, requires Twitch developer client credentials.", keyRequired: true },
+      { id: "vndb", name: "VNDB", hint: "Visual novel information; token optional.", keyRequired: false },
+    ] as const;
 
   const platformNames: Record<Platform, string> = {
     steam: "Steam",
@@ -61,6 +79,20 @@
   let dialogError = $state("");
   let savingDialog = $state(false);
   let settings = $state<Settings | null>(null);
+  let apiKeyStatus = $state<ApiKeyStatus | null>(null);
+  let apiKeyDrafts = $state<Record<ApiKeyField, string>>({
+    steamgriddb: "",
+    igdbClientId: "",
+    igdbClientSecret: "",
+    vndb: "",
+  });
+  let clearApiKeys = $state<Record<ApiKeyField, boolean>>({
+    steamgriddb: false,
+    igdbClientId: false,
+    igdbClientSecret: false,
+    vndb: false,
+  });
+  let fetchingMetadataId = $state("");
   let newPlatform = $state<CustomPlatform>("local");
   let newTitle = $state("");
   let newExecutable = $state("");
@@ -274,12 +306,99 @@
     activeDialog = "settings";
     savingDialog = true;
     try {
-      settings = await invoke<Settings>("get_settings");
+      const [loadedSettings, keyStatus] = await Promise.all([
+        invoke<Settings>("get_settings"),
+        invoke<ApiKeyStatus>("get_api_key_status"),
+      ]);
+      settings = {
+        ...loadedSettings,
+        metadataProviders: loadedSettings.metadataProviders.filter((provider) => provider !== "rawg"),
+      };
+      apiKeyStatus = keyStatus;
     } catch {
       dialogError = "Settings couldn't be loaded. Please try again.";
       activeDialog = null;
     } finally {
       savingDialog = false;
+    }
+  }
+
+  function toggleMetadataProvider(provider: string) {
+    if (!settings) return;
+    const selected = new Set(settings.metadataProviders);
+    if (selected.has(provider)) selected.delete(provider);
+    else selected.add(provider);
+    settings = {
+      ...settings,
+      metadataProviders: metadataProviders
+        .map(({ id }) => id)
+        .filter((id) => selected.has(id)),
+    };
+  }
+
+  async function saveApiKeys() {
+    if (savingDialog) return;
+    savingDialog = true;
+    dialogError = "";
+    const keys: Partial<Record<ApiKeyField, string>> = {};
+    for (const field of Object.keys(apiKeyDrafts) as ApiKeyField[]) {
+      if (apiKeyDrafts[field].trim()) keys[field] = apiKeyDrafts[field];
+      else if (clearApiKeys[field]) keys[field] = "";
+    }
+    try {
+      apiKeyStatus = await invoke<ApiKeyStatus>("set_api_keys", { keys });
+      apiKeyDrafts = {
+        steamgriddb: "",
+        igdbClientId: "",
+        igdbClientSecret: "",
+        vndb: "",
+      };
+      clearApiKeys = {
+        steamgriddb: false,
+        igdbClientId: false,
+        igdbClientSecret: false,
+        vndb: false,
+      };
+      notice = "Credential status updated. Secret values are never returned to the UI.";
+    } catch {
+      dialogError = "Credentials couldn't be saved. Please try again.";
+    } finally {
+      savingDialog = false;
+    }
+  }
+
+  async function fetchGameMetadata(game: GameEntry) {
+    if (fetchingMetadataId) return;
+    fetchingMetadataId = game.id;
+    actionError = "";
+    notice = "";
+    try {
+      const locale = settings?.locale ?? "en";
+      const metadata = await invoke<GameMetadata>("fetch_metadata", { id: game.id, locale });
+      if (snapshot) {
+        snapshot = {
+          ...snapshot,
+          games: snapshot.games.map((entry) =>
+            entry.id === game.id ? { ...entry, metadata } : entry,
+          ),
+        };
+      }
+      notice = `Metadata updated for ${game.title}.`;
+    } catch (error) {
+      const code =
+        typeof error === "object" && error !== null && "code" in error
+          ? String(error.code)
+          : "";
+      actionError =
+        errorMessages[code] ??
+        ({
+          metadataNoProviders: "Enable a metadata provider in Settings first.",
+          metadataMissingKey: "Add the required provider credentials in Settings first.",
+          metadataNotFound: "No metadata was found for this game.",
+          metadataRequestFailed: "The metadata service could not be reached.",
+        }[code] ?? "Game metadata couldn't be fetched.");
+    } finally {
+      fetchingMetadataId = "";
     }
   }
 
@@ -496,10 +615,10 @@
         {#each visibleGames as game (game.id)}
           <article class="game-card">
             <div class="cover-wrap">
-              {#if game.coverUrl || game.heroUrl}
+              {#if game.coverUrl || game.metadata?.coverUrl || game.heroUrl || game.metadata?.heroUrl}
                 <img
                   class="cover-image"
-                  src={game.coverUrl ?? game.heroUrl ?? ""}
+                  src={game.coverUrl ?? game.metadata?.coverUrl ?? game.heroUrl ?? game.metadata?.heroUrl ?? ""}
                   alt=""
                   loading="lazy"
                 />
@@ -573,6 +692,30 @@
                 </button>
               {/if}
             </div>
+            {#if game.metadata}
+              <div class="metadata-details">
+                {#if game.metadata.developer}
+                  <p class="metadata-developer">{game.metadata.developer}</p>
+                {/if}
+                {#if game.metadata.description}
+                  <p class="metadata-description">{game.metadata.description}</p>
+                {/if}
+                {#if game.metadata.genres.length}
+                  <p class="metadata-genres">{game.metadata.genres.slice(0, 3).join(" · ")}</p>
+                {/if}
+              </div>
+            {/if}
+            <button
+              class="metadata-button"
+              onclick={() => fetchGameMetadata(game)}
+              disabled={fetchingMetadataId === game.id || Boolean(fetchingMetadataId)}
+            >
+              {fetchingMetadataId === game.id
+                ? "Fetching details…"
+                : game.metadata
+                  ? "Refresh details"
+                  : "Fetch details"}
+            </button>
           </article>
         {/each}
       </section>
@@ -685,6 +828,96 @@
                 (settings = { ...settings!, minimizeOnLaunch: event.currentTarget.checked })}
             />
           </label>
+          <fieldset class="provider-options">
+            <legend>Optional metadata providers</legend>
+            <p class="field-hint">
+              Nothing is fetched unless you enable a provider and request details for a game. RAWG is
+              discontinued and unavailable; IGDB is supported instead.
+            </p>
+            {#each metadataProviders as provider}
+              <label class="provider-option">
+                <span>
+                  <strong>{provider.name}</strong>
+                  <small>{provider.hint}</small>
+                </span>
+                <input
+                  type="checkbox"
+                  checked={settings.metadataProviders.includes(provider.id)}
+                  onchange={() => toggleMetadataProvider(provider.id)}
+                />
+              </label>
+            {/each}
+          </fieldset>
+          <fieldset class="credential-options">
+            <legend>Provider credentials</legend>
+            <p class="field-hint">
+              Secrets are stored locally and never returned to the UI. Leave a field blank to keep its
+              saved value, or choose Clear to remove it.
+            </p>
+            <label class="form-field">
+              <span>SteamGridDB API key {apiKeyStatus?.steamgriddb ? "· Saved" : "· Not set"}</span>
+              <input
+                type="password"
+                autocomplete="new-password"
+                bind:value={apiKeyDrafts.steamgriddb}
+                placeholder="Enter a new key"
+              />
+              {#if apiKeyStatus?.steamgriddb}
+                <span class="clear-key">
+                  <input type="checkbox" bind:checked={clearApiKeys.steamgriddb} />
+                  Clear saved key
+                </span>
+              {/if}
+            </label>
+            <label class="form-field">
+              <span>IGDB / Twitch client ID {apiKeyStatus?.igdbClientId ? "· Saved" : "· Not set"}</span>
+              <input
+                type="password"
+                autocomplete="new-password"
+                bind:value={apiKeyDrafts.igdbClientId}
+                placeholder="Enter a new client ID"
+              />
+              {#if apiKeyStatus?.igdbClientId}
+                <span class="clear-key">
+                  <input type="checkbox" bind:checked={clearApiKeys.igdbClientId} />
+                  Clear saved client ID
+                </span>
+              {/if}
+            </label>
+            <label class="form-field">
+              <span>IGDB / Twitch client secret {apiKeyStatus?.igdbClientSecret ? "· Saved" : "· Not set"}</span>
+              <input
+                type="password"
+                autocomplete="new-password"
+                bind:value={apiKeyDrafts.igdbClientSecret}
+                placeholder="Enter a new client secret"
+              />
+              {#if apiKeyStatus?.igdbClientSecret}
+                <span class="clear-key">
+                  <input type="checkbox" bind:checked={clearApiKeys.igdbClientSecret} />
+                  Clear saved client secret
+                </span>
+              {/if}
+            </label>
+            <label class="form-field">
+              <span>VNDB token {apiKeyStatus?.vndb ? "· Saved" : "· Not set"} <small>Optional</small></span>
+              <input
+                type="password"
+                autocomplete="new-password"
+                bind:value={apiKeyDrafts.vndb}
+                placeholder="Enter a new token"
+              />
+              {#if apiKeyStatus?.vndb}
+                <span class="clear-key">
+                  <input type="checkbox" bind:checked={clearApiKeys.vndb} />
+                  Clear saved token
+                </span>
+              {/if}
+            </label>
+            <button class="secondary-button save-keys" type="button" onclick={saveApiKeys} disabled={savingDialog}>
+              Save credentials
+            </button>
+          </fieldset>
           {#if dialogError}<p class="form-error" role="alert">{dialogError}</p>{/if}
           <div class="modal-actions">
             <button class="secondary-button" type="button" onclick={() => (activeDialog = null)}>Cancel</button>
