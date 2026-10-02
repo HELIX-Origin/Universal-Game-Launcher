@@ -22,9 +22,11 @@ Use the [roadmap](ROADMAP.md) for broader milestones and [BUGS.md](BUGS.md) for 
 
 ## 🧪 Verification still required
 
-- [ ] Run frontend `npm test`, `npm run check`, and `npm run build`, plus backend `cargo test`, after metadata integration.
+- [x] Run frontend `npm test` (2 files, 8 tests passed), `npm run check` (0 errors, 0 warnings), and `npm run build` after metadata integration.
+- [ ] Run backend `cargo test --manifest-path /home/runner/work/Universal-Game-Launcher/Universal-Game-Launcher/src-tauri/Cargo.toml`; the attempt is blocked because GTK/GIO development libraries (`gio-2.0`, `glib-2.0`, and `gobject-2.0`) are unavailable in this environment.
+- [x] Run `cargo fmt --manifest-path /home/runner/work/Universal-Game-Launcher/Universal-Game-Launcher/src-tauri/Cargo.toml --check`.
 - [ ] Verify metadata providers and credentials in the desktop app without using real credentials in logs or fixtures.
-- [ ] Record execution of the RAWG-retirement and legacy-settings migration tests in [BUGS.md](BUGS.md).
+- [ ] Record successful execution of the RAWG-retirement and legacy-settings migration tests in [BUGS.md](BUGS.md) after the required system libraries are available.
 - [ ] Validate scanners and launch actions on actual supported operating-system/client combinations; record reproducible issues in [BUGS.md](BUGS.md).
 - [ ] Keep [README.md](README.md), [ROADMAP.md](ROADMAP.md), [BUGS.md](BUGS.md), and this checklist aligned with verified behavior.
 

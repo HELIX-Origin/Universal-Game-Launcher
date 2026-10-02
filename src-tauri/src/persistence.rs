@@ -473,10 +473,7 @@ mod tests {
         .unwrap();
 
         let data = UserData::load(&path);
-        assert_eq!(
-            data.settings.metadata_providers,
-            [MetadataProvider::Igdb]
-        );
+        assert_eq!(data.settings.metadata_providers, [MetadataProvider::Igdb]);
     }
 
     #[test]

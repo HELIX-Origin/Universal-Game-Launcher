@@ -702,7 +702,6 @@ mod tests {
         let m = parse_vndb(&vn, "Steins;Gate");
         assert_eq!(m.description.as_deref(), Some("Time travel\n\nPart two"));
         assert_eq!(m.developer.as_deref(), Some("5pb."));
-
     }
 
     #[test]
@@ -756,10 +755,7 @@ mod tests {
             "X",
             crate::models::LaunchTarget::uri("https://x"),
         );
-        for p in [
-            MetadataProvider::SteamGridDb,
-            MetadataProvider::Igdb,
-        ] {
+        for p in [MetadataProvider::SteamGridDb, MetadataProvider::Igdb] {
             assert_eq!(
                 fetch(&g, &[p], &ApiKeys::default(), "en", 0)
                     .unwrap_err()
