@@ -29,7 +29,7 @@ Use the [roadmap](ROADMAP.md) for broader milestones and [BUGS.md](BUGS.md) for 
 - [x] Run `npm run tauri build`; Linux `.deb`, `.rpm`, and `.AppImage` bundles were produced. Installer installation and runtime smoke tests remain pending.
 - [ ] Verify metadata providers and credentials in the desktop app without using real credentials in logs or fixtures.
 - [x] Record successful execution of the RAWG-retirement and legacy-settings migration tests in [BUGS.md](BUGS.md).
-- [ ] Validate scanners and launch actions on actual supported operating-system/client combinations; record reproducible issues in [BUGS.md](BUGS.md).
+- [ ] Validate scanner behavior with synthetic or explicitly authorized data, and launch handoffs on supported operating-system/client combinations; record reproducible issues in [BUGS.md](BUGS.md).
 - [x] Keep [README.md](README.md), [ROADMAP.md](ROADMAP.md), [BUGS.md](BUGS.md), and this checklist aligned with verified behavior.
 
 ## 🗂️ Implemented work record
@@ -44,3 +44,11 @@ Use the [roadmap](ROADMAP.md) for broader milestones and [BUGS.md](BUGS.md) for 
 - Linux desktop packaging succeeds on Ubuntu 24.04 and produces `.deb`, `.rpm`, and `.AppImage` bundles; package install/launch behavior has not been tested.
 
 Only mark a verification item complete after recording its exact command or desktop environment/result. Desktop validation is still blocked: this environment has no graphical session (`DISPLAY`/`WAYLAND_DISPLAY`) or installed Steam, Lutris, Heroic, or Flatpak clients. Windows/macOS packaging must be checked in native environments. No real store data was scanned.
+
+## 📦 Release readiness still open
+
+- [ ] Add translated UI catalogs together with a selector; no non-English UI is currently shipped.
+- [ ] Add frontend coverage for interactive settings and Tauri command/payload boundaries beyond the existing library and catalog tests.
+- [ ] Install and smoke-test Linux packages in a graphical environment; test Windows and macOS packages in their native environments.
+- [ ] Verify metadata key saving/status and live provider responses using disposable credentials supplied for testing.
+- [ ] Review accessibility, privacy, credential/error handling, dependency advisories, and packaging behavior before describing the app as release-ready.
