@@ -51,4 +51,6 @@ Only mark a verification item complete after recording its exact command or desk
 - [ ] Add frontend coverage for interactive settings and Tauri command/payload boundaries beyond the existing library and catalog tests.
 - [ ] Install and smoke-test Linux packages in a graphical environment; test Windows and macOS packages in their native environments.
 - [ ] Verify metadata key saving/status and live provider responses using disposable credentials supplied for testing.
-- [ ] Review accessibility, privacy, credential/error handling, dependency advisories, and packaging behavior before describing the app as release-ready.
+- [x] Review npm audit status: `npm audit --omit=dev` reports 0 production vulnerabilities; full `npm audit` reports 3 low-severity development-chain findings through `@sveltejs/kit@2.70.3` → `cookie@0.6.0`.
+- [ ] Resolve or formally accept the development dependency advisory. npm's suggested `--force` fix requires a breaking upgrade to SvelteKit 3; do not apply it without a separate compatibility-tested migration.
+- [ ] Review accessibility, privacy, credential/error handling, and package installation behavior before describing the app as release-ready.
