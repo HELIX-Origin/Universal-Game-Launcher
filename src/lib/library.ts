@@ -44,7 +44,7 @@ export interface LibrarySnapshot {
   scannedAt: number;
 }
 
-export type Filter = "all" | "installed" | "favorites";
+export type Filter = "all" | "installed" | "favorites" | "hidden";
 export type GameActionCommand = "launch_game" | "install_game";
 
 export function gameActionCommand(game: GameEntry): GameActionCommand | null {
@@ -63,7 +63,7 @@ export function filterLibraryGames(
 
   return games
     .filter((game) => {
-      if (game.hidden) return false;
+      if (filter === "hidden" ? !game.hidden : game.hidden) return false;
       if (filter === "installed" && !game.installed) return false;
       if (filter === "favorites" && !game.favorite) return false;
       if (!normalizedQuery) return true;

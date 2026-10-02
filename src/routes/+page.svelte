@@ -120,6 +120,29 @@
     }
   }
 
+  async function toggleHidden(game: GameEntry) {
+    if (activeGameId) return;
+
+    activeGameId = game.id;
+    actionError = "";
+    notice = "";
+    try {
+      await invoke("set_hidden", { id: game.id, value: !game.hidden });
+      if (snapshot) {
+        snapshot = {
+          ...snapshot,
+          games: snapshot.games.map((entry) =>
+            entry.id === game.id ? { ...entry, hidden: !entry.hidden } : entry,
+          ),
+        };
+      }
+    } catch {
+      actionError = "This game's visibility couldn't be changed. Please try again.";
+    } finally {
+      activeGameId = "";
+    }
+  }
+
   function formatScanTime(seconds: number) {
     if (!seconds) return "Not scanned yet";
     return new Intl.DateTimeFormat(undefined, {
@@ -145,13 +168,15 @@
     </a>
 
     <div class="sidebar-label">Library</div>
-    <a class="nav-link active" href="#library" aria-current="page">
+    <button class:active={filter === "all"} class="nav-link" onclick={() => (filter = "all")}>
       <span class="nav-icon" aria-hidden="true">▦</span>
       All games
-    </a>
-    <button class="nav-link" onclick={() => (filter = "favorites")}>
-      <span class="nav-icon" aria-hidden="true">♡</span>
-      Favorites
+    </button>
+    <button class:active={filter === "favorites"} class="nav-link" onclick={() => (filter = "favorites")}>
+      <span class="nav-icon" aria-hidden="true">♡</span>Favorites
+    </button>
+    <button class:active={filter === "hidden"} class="nav-link" onclick={() => (filter = "hidden")}>
+      <span class="nav-icon" aria-hidden="true">◌</span>Hidden
     </button>
 
     <div class="sidebar-footer">
@@ -180,7 +205,9 @@
         <h1 id="page-title">Library</h1>
         <p class="subtitle">
           {#if snapshot}
-            {snapshot.games.filter((game) => !game.hidden).length} games ·
+            {filter === "hidden"
+              ? snapshot.games.filter((game) => game.hidden).length
+              : snapshot.games.filter((game) => !game.hidden).length} games ·
             {snapshot.platforms.filter((platform) => platform.gameCount > 0).length} platforms
           {:else}
             Your games from every store, in one place.
@@ -246,6 +273,13 @@
         >
           Favorites
         </button>
+        <button
+          class:chosen={filter === "hidden"}
+          aria-pressed={filter === "hidden"}
+          onclick={() => (filter = "hidden")}
+        >
+          Hidden
+        </button>
       </div>
     </section>
 
@@ -302,7 +336,7 @@
                 </div>
               {/if}
               <span class:installed={game.installed} class="game-status">
-                {game.installed ? "Installed" : game.install ? "Not installed" : "Cloud"}
+                {game.custom ? "Added by you" : game.installed ? "Installed" : game.install ? "Not installed" : "Cloud"}
               </span>
               <button
                 class:favorite-active={game.favorite}
@@ -313,6 +347,15 @@
                 aria-pressed={game.favorite}
               >
                 {game.favorite ? "♥" : "♡"}
+              </button>
+              <button
+                class="visibility-button"
+                onclick={() => toggleHidden(game)}
+                disabled={activeGameId === game.id}
+                aria-label={game.hidden ? `Show ${game.title} in library` : `Hide ${game.title}`}
+                title={game.hidden ? "Show in library" : "Hide game"}
+              >
+                {game.hidden ? "◉" : "⊘"}
               </button>
               <div class="cover-shade"></div>
             </div>
@@ -344,7 +387,11 @@
     {/if}
 
     {#if snapshot && !loading && visibleGames.length > 0}
-      <p class="results-count">Showing {visibleGames.length} of {snapshot.games.filter((game) => !game.hidden).length} games</p>
+      <p class="results-count">
+        Showing {visibleGames.length} of {filter === "hidden"
+          ? snapshot.games.filter((game) => game.hidden).length
+          : snapshot.games.filter((game) => !game.hidden).length} games
+      </p>
     {/if}
   </main>
 </div>
@@ -832,6 +879,27 @@
     cursor: pointer;
     font-size: 17px;
     backdrop-filter: blur(7px);
+  }
+
+  .visibility-button {
+    position: absolute;
+    top: 45px;
+    right: 8px;
+    display: grid;
+    width: 30px;
+    height: 30px;
+    place-items: center;
+    border: 1px solid #ffffff24;
+    border-radius: 50%;
+    background: #141519c9;
+    color: #fff;
+    cursor: pointer;
+    font-size: 15px;
+    backdrop-filter: blur(7px);
+  }
+
+  .visibility-button:hover {
+    color: #bafc54;
   }
 
   .favorite-button:hover,

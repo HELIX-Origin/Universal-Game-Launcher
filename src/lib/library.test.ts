@@ -68,6 +68,12 @@ describe("filterLibraryGames", () => {
     ).toEqual(["Alpha"]);
   });
 
+  it("shows only hidden games in the hidden filter", () => {
+    expect(
+      filterLibraryGames(games, "", "hidden", platformNames).map(({ title }) => title),
+    ).toEqual(["Hidden"]);
+  });
+
   it("searches titles and platform names without case sensitivity", () => {
     expect(
       filterLibraryGames(games, "  EPIC ", "all", platformNames).map(({ title }) => title),

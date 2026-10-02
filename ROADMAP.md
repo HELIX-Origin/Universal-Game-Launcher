@@ -12,7 +12,8 @@ This roadmap describes intended work; it is **not** a claim that the user interf
 
 ## 🧩 Next — personal library and settings
 
-- Expose custom games, favorites, hidden entries, and install folders through the existing backend commands.
+- [x] Surface favorite and hidden-game management in the library using existing backend commands.
+- [ ] Add UI flows for creating/removing custom games, browsing install folders, and editing launcher settings.
 - Provide settings for enabled platforms, display choices, and optional metadata providers.
 - Keep third-party credentials optional: browsing the local library must not depend on them.
 - Connect the existing English message catalog to the UI. Add translated dictionaries only when the UI can select and use them.
