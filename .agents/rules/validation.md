@@ -4,7 +4,7 @@ Choose checks that match the files and behavior changed. Record exact commands, 
 
 ## 🔧 Existing project checks
 
-- **Frontend:** Run `npm run check` and `npm run build` from the repository root.
+- **Frontend:** Run `npm run check`, `npm test`, and `npm run build` from the repository root.
 - **Backend:** Run `cargo test` from `src-tauri/`.
 - **Desktop behavior:** A desktop smoke test requires Tauri system prerequisites and relevant real client installations.
 - **Documentation only:** Check referenced paths, links, and claims against the current tree; application builds are not required.

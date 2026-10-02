@@ -12,4 +12,4 @@ Treat `src/lib/i18n/locales/en.ts` as an English source catalog. Its existence d
 
 ## 🛡️ Safety, verification, and handoff
 
-Follow the shared [safety rules](../../../rules/safety.md) and [validation rules](../../../rules/validation.md). For frontend changes, run the applicable existing checks: `npm run check` and `npm run build` from the repository root. Return a [handoff](../../../templates/handoff.md) listing affected files, verification results, blockers, and unresolved issues.
+Follow the shared [safety rules](../../../rules/safety.md) and [validation rules](../../../rules/validation.md). For frontend changes, run applicable checks from the repository root: `npm run check`, `npm test`, and `npm run build`. Return a [handoff](../../../templates/handoff.md) listing affected files, verification results, blockers, and unresolved issues.

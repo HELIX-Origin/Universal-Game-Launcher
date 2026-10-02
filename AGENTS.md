@@ -31,6 +31,6 @@ Choose only the role and skill relevant to the task. The lead coordinates fronte
 
 ## 🔍 Verification
 
-From the repository root, run `npm ci` if dependencies are missing, then use `npm run check` for frontend types and `npm run build` for frontend packaging. For backend changes, run `cargo test` from `src-tauri/`. A packaged desktop build uses `npm run tauri build` and requires the Tauri prerequisites for the operating system.
+From the repository root, run `npm ci` if dependencies are missing, then use `npm run check` for frontend types, `npm test` for frontend regression tests, and `npm run build` for frontend packaging. For backend changes, run `cargo test` from `src-tauri/`. A packaged desktop build uses `npm run tauri build` and requires the Tauri prerequisites for the operating system.
 
 Run only checks relevant to the change. State exact commands and outcomes, distinguish source inspection from runtime testing, and report environmental blockers rather than claiming unverified success. Do not add dependencies without need.
