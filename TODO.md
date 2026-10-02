@@ -4,9 +4,10 @@ Use the [roadmap](ROADMAP.md) for broader milestones and [BUGS.md](BUGS.md) for 
 
 ## 🎮 First library experience
 
-- [ ] Replace the starter UI with a screen backed by `get_library`.
-- [ ] Provide clear loading, empty, refresh, and command-error states; resolve B-01 and B-02 in [BUGS.md](BUGS.md).
-- [ ] Connect launch and install actions only when the game entry supports them, and verify the handoff to the official client.
+- [x] Replace the starter UI with a screen backed by `get_library`.
+- [x] Provide loading, empty, refresh, and command-error states; resolve B-01 and B-02 in [BUGS.md](BUGS.md).
+- [x] Connect launch and install actions only when the game entry supports them.
+- [ ] Smoke-test launch/install handoffs to official clients on supported operating systems.
 - [ ] Add regression coverage for the frontend/backend command boundary and initial library state.
 
 ## ⚙️ Personal library and settings

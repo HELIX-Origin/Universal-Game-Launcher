@@ -4,7 +4,7 @@ The issues below are confirmed by inspecting the current source. They are **not*
 
 ## ✅ Resolved in source
 
-The starter screen described below has been replaced by a library interface. Source inspection confirms it no longer calls the unregistered `greet` command or references the absent starter logos. Desktop runtime behavior has not yet been smoke-tested.
+The starter screen described below has been replaced by a library interface. Source inspection and successful frontend type/build checks confirm it no longer calls the unregistered `greet` command or references the absent starter logos. Desktop runtime behavior has not yet been smoke-tested.
 
 ### B-01 — Starter page called a command that was not registered
 
