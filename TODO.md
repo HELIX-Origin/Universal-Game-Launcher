@@ -24,8 +24,9 @@ Use the [roadmap](ROADMAP.md) for broader milestones and [BUGS.md](BUGS.md) for 
 ## 🧪 Verification still required
 
 - [x] Run frontend `npm test` (3 files, 11 tests passed), `npm run check` (0 errors, 0 warnings), and `npm run build` after catalog integration.
-- [x] Run backend `cargo test --manifest-path /home/runner/work/Universal-Game-Launcher/Universal-Game-Launcher/src-tauri/Cargo.toml` (62 passed, 0 failed) after installing the Tauri GTK/WebKit system prerequisites.
-- [x] Run `cargo fmt --manifest-path /home/runner/work/Universal-Game-Launcher/Universal-Game-Launcher/src-tauri/Cargo.toml --check`.
+- [x] Run `cargo test` from `src-tauri/` (62 passed, 0 failed) after installing the Tauri GTK/WebKit system prerequisites.
+- [x] Run `cargo fmt --check` from `src-tauri/`.
+- [x] Run `npm run tauri build`; Linux `.deb`, `.rpm`, and `.AppImage` bundles were produced. Installer installation and runtime smoke tests remain pending.
 - [ ] Verify metadata providers and credentials in the desktop app without using real credentials in logs or fixtures.
 - [x] Record successful execution of the RAWG-retirement and legacy-settings migration tests in [BUGS.md](BUGS.md).
 - [ ] Validate scanners and launch actions on actual supported operating-system/client combinations; record reproducible issues in [BUGS.md](BUGS.md).
@@ -40,5 +41,6 @@ Use the [roadmap](ROADMAP.md) for broader milestones and [BUGS.md](BUGS.md) for 
 - RAWG API calls retired; IGDB retained as the replacement. Legacy RAWG configuration is not selectable or used for requests.
 - English UI messages now resolve through a typed catalog helper with placeholder interpolation; no translated UI dictionaries or locale selector are provided yet.
 - Backend unit tests passed, including RAWG request rejection and settings migration; tests used isolated fixtures and did not inspect real user store data.
+- Linux desktop packaging succeeds on Ubuntu 24.04 and produces `.deb`, `.rpm`, and `.AppImage` bundles; package install/launch behavior has not been tested.
 
-Only mark a verification item complete after recording its exact command or desktop environment/result. Desktop validation is still blocked: this environment has no graphical session (`DISPLAY`/`WAYLAND_DISPLAY`) or installed Steam, Lutris, Heroic, or Flatpak clients. No real store data was scanned.
+Only mark a verification item complete after recording its exact command or desktop environment/result. Desktop validation is still blocked: this environment has no graphical session (`DISPLAY`/`WAYLAND_DISPLAY`) or installed Steam, Lutris, Heroic, or Flatpak clients. Windows/macOS packaging must be checked in native environments. No real store data was scanned.

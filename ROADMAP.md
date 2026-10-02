@@ -31,7 +31,9 @@ This roadmap describes intended work; it is **not** a claim that the user interf
 
 ## ✅ Later — prepare for release
 
-- Exercise scanning, persistence, and launch flows against real client data on each target operating system.
+- [x] Build Linux `.deb`, `.rpm`, and `.AppImage` packages on Ubuntu 24.04; this confirms packaging only, not install/runtime behavior.
+- [ ] Validate installation and desktop behavior on target operating systems with supported store clients; do not scan real user libraries without explicit authorization.
+- Validate scanner behavior with synthetic or explicitly authorized data; verify persistence and launch handoffs across supported operating systems/client installations.
 - Expand regression tests for settings, metadata provider opt-in, credentials, and important frontend/backend command boundaries.
 - Review accessibility, privacy, error handling, installer packaging, and documentation before describing the project as release-ready.
 

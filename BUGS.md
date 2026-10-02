@@ -26,7 +26,7 @@ Desktop runtime behavior, metadata network calls, and store/client handoffs have
 
 - **Originally observed:** Metadata settings exposed RAWG and the backend sent requests to `api.rawg.io`, although the project had moved to IGDB.
 - **Resolution:** Removed RAWG from selectable providers and outbound requests. Retained the legacy enum/key fields so older user data can still be deserialized; settings loading drops RAWG from the active provider list.
-- **Verification:** `cargo test --manifest-path /home/runner/work/Universal-Game-Launcher/Universal-Game-Launcher/src-tauri/Cargo.toml` passes (62 tests, 0 failures), including legacy RAWG request rejection and settings migration; `cargo fmt --manifest-path /home/runner/work/Universal-Game-Launcher/Universal-Game-Launcher/src-tauri/Cargo.toml --check` passes. Tests use isolated fixtures and did not inspect real user store data. Desktop/provider runtime behavior remains unverified; see [TODO.md](TODO.md).
+- **Verification:** `cargo test` from `src-tauri/` passes (62 tests, 0 failures), including legacy RAWG request rejection and settings migration; `cargo fmt --check` from `src-tauri/` passes. Tests use isolated fixtures and did not inspect real user store data. Desktop/provider runtime behavior remains unverified; see [TODO.md](TODO.md).
 
 ## 📝 Adding and closing bug records
 
