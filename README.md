@@ -1,31 +1,35 @@
-# Universal Game Launcher
+# 🎮 Universal Game Launcher
 
-A desktop launcher intended to show games from multiple stores in one library. The Rust/Tauri backend reads locally installed clients and their data, keeps user-added games and settings, and delegates launching or installation to the official client. Optional metadata enrichment uses IGDB in place of the discontinued RAWG API; discovery itself does not require a store account or online API.
+Universal Game Launcher is a desktop application intended to bring games from multiple stores into one library. The Rust/Tauri backend reads locally installed clients and their data, stores user-added games and settings, and delegates supported launch or installation actions to the official client.
 
-**Current state:** early work in progress. The backend has store scanners and Tauri commands, but the Svelte page is still the starter greeting screen and does not expose the library. Do not treat the current window as a working game launcher.
+Optional metadata enrichment uses **IGDB** in place of the discontinued RAWG API. Browsing locally discovered games does not require a store account or an online metadata service.
 
-## Where to start
+> ⚠️ **Project status:** This project is early work in progress. The backend has store scanners and Tauri commands, but the Svelte page is still starter content and does not expose the library. The current window is **not a working game launcher**.
 
-- [ROADMAP.md](ROADMAP.md) — milestones and priorities.
-- [BUGS.md](BUGS.md) — reproducible issues observed in the current tree.
-- [TODO.md](TODO.md) — ordered next-session checklist.
-- [AGENTS.md](AGENTS.md) — architecture, working conventions, and agent handoffs.
+## 🧭 Start here
 
-## Architecture
+These documents describe the current project, known issues, priorities, and contributor workflow:
+
+- [📍 Roadmap](ROADMAP.md) — planned milestones and priorities.
+- [🐛 Bugs](BUGS.md) — issues confirmed from the current source.
+- [✅ Next-session checklist](TODO.md) — immediate work items; unchecked items are not shipped features.
+- [🤖 Agent guide](AGENTS.md) — architecture, working conventions, and the agent handoff process.
+
+## 🏗️ Architecture at a glance
 
 | Area | Location | Responsibility |
 | --- | --- | --- |
-| Desktop commands | `src-tauri/src/lib.rs` | Tauri command registration and app state |
-| Discovery | `src-tauri/src/stores/`, `src-tauri/src/library.rs` | Local store scanning and library snapshot |
-| Launching and data | `src-tauri/src/launcher.rs`, `src-tauri/src/persistence.rs` | Safe launch targets, custom games, settings |
-| Metadata | `src-tauri/src/metadata.rs` | Optional provider lookups and API-key status |
-| UI | `src/routes/+page.svelte`, `src/lib/i18n/` | Starter page and incomplete localization groundwork |
+| Desktop commands | `src-tauri/src/lib.rs` | Registers Tauri commands and initializes app state. |
+| Discovery | `src-tauri/src/stores/`, `src-tauri/src/library.rs` | Reads local store data and assembles library snapshots. |
+| Launching and user data | `src-tauri/src/launcher.rs`, `src-tauri/src/persistence.rs` | Validates launch targets and manages custom games and settings. |
+| Optional metadata | `src-tauri/src/metadata.rs` | Fetches opt-in metadata and reports API-key status. |
+| User interface | `src/routes/+page.svelte`, `src/lib/i18n/` | Currently starter UI and incomplete localization groundwork. |
 
-The desktop app uses Tauri 2, Rust, SvelteKit, Svelte 5, TypeScript, and Vite. Store integrations are platform-dependent; cloud services are user-added shortcuts, not automatically discovered libraries.
+The application uses Tauri 2, Rust, SvelteKit, Svelte 5, TypeScript, and Vite. Store discovery depends on the operating system and installed client. Cloud services are user-added shortcuts, not automatically discovered libraries.
 
-## Development
+## 🧰 Development setup
 
-Install Node.js/npm, Rust (at least 1.85), and the [Tauri 2 system prerequisites](https://v2.tauri.app/start/prerequisites/) for your OS. Then run from the repository root:
+Install Node.js/npm, Rust (at least version 1.85), and the [Tauri 2 system prerequisites](https://v2.tauri.app/start/prerequisites/) for your operating system. From the repository root:
 
 ```sh
 npm ci
@@ -34,8 +38,16 @@ npm run build
 npm run tauri dev
 ```
 
-`npm run build` builds only the web frontend. To test the Rust backend, run `cargo test` from `src-tauri/`; a packaged desktop build uses `npm run tauri build`. No frontend test script is currently defined.
+### 🔍 What the checks cover
 
-## Continuing the work
+- `npm run check` checks the frontend types.
+- `npm run build` packages the web frontend; it does not package the desktop application.
+- `npm run tauri dev` starts the desktop application and requires the Tauri system prerequisites.
+- To test the Rust backend, run `cargo test` from `src-tauri/`.
+- To package the desktop application, run `npm run tauri build`.
 
-Start with [TODO.md](TODO.md), verify the issues in [BUGS.md](BUGS.md), and keep the handoff documents aligned with implemented behavior. The agent roles, task-specific skills, rules, and handoff template are indexed in [AGENTS.md](AGENTS.md).
+There is currently no frontend test script. Report commands that could not run instead of treating them as successful.
+
+## 🚀 Continuing development
+
+Start with the [next-session checklist](TODO.md), check confirmed issues in [BUGS.md](BUGS.md), and keep the [roadmap](ROADMAP.md) aligned with verified progress. Follow [AGENTS.md](AGENTS.md) when using the repository's roles, skills, safety rules, and handoff template.

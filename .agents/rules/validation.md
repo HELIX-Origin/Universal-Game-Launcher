@@ -1,7 +1,14 @@
-# Validation rules
+# 🧪 Validation rules
 
-- Validate affected behavior with existing tools; record exact commands, results, and environmental blockers.
-- Frontend: `npm run check` and `npm run build` from the repository root. Backend: `cargo test` from `src-tauri/`. A desktop smoke test requires Tauri prerequisites and real client installations.
-- Distinguish source inspection from runtime reproduction. For bugs, capture steps, expected/actual behavior, OS/client versions where relevant, and regression coverage.
-- Scan changed files for secrets before committing. Document unverified areas rather than presenting them as passed checks.
-- For documentation-only edits, check paths, links, and statements against the current tree; application builds are not required.
+Choose checks that match the files and behavior changed. Record exact commands, outcomes, and environmental blockers.
+
+## 🔧 Existing project checks
+
+- **Frontend:** Run `npm run check` and `npm run build` from the repository root.
+- **Backend:** Run `cargo test` from `src-tauri/`.
+- **Desktop behavior:** A desktop smoke test requires Tauri system prerequisites and relevant real client installations.
+- **Documentation only:** Check referenced paths, links, and claims against the current tree; application builds are not required.
+
+## 📋 Reporting evidence
+
+Distinguish source inspection from runtime reproduction. For bugs, record reproduction steps, expected and actual behavior, relevant operating-system/client versions, and regression coverage where applicable. Scan changed files for secrets before committing. Document anything not verified rather than presenting it as a passed check.

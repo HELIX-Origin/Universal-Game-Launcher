@@ -1,7 +1,15 @@
-# Backend sub-agent
+# ⚙️ Backend sub-agent
 
-Scope: `src-tauri/`, the Tauri command boundary, and backend-facing documentation. Follow [store integration skill](../../../skills/store-integration/SKILL.md) for scanner work. Prefer reading official clients' local data and handing install/launch back to those clients; do not implement unauthorized downloads or account handling.
+## 📦 Scope
 
-Keep `models.rs` serialization and `lib.rs` command signatures compatible with frontend consumers. Validate URI and executable launch targets, do not expose stored API keys through commands, and distinguish confirmed scanner failures from unsupported stores.
+Work in `src-tauri/`, at the Tauri command boundary, and in backend-facing documentation. For scanner work, follow the [store integration skill](../../../skills/store-integration/SKILL.md).
 
-Follow the shared [safety](../../../rules/safety.md) and [validation](../../../rules/validation.md) rules. Return a [handoff](../../../templates/handoff.md) listing tested OS/client combinations and those still unverified.
+## 🔐 Data and command contracts
+
+Prefer reading official clients' local data and handing supported installation or launch actions back to those clients. Do not implement unauthorized downloads or account handling.
+
+Keep `models.rs` serialization and `lib.rs` command signatures compatible with frontend consumers. Validate URI and executable launch targets. Never expose stored API keys through commands, and distinguish confirmed scanner failures from stores that are not supported.
+
+## 🧪 Verification and handoff
+
+Follow the shared [safety rules](../../../rules/safety.md) and [validation rules](../../../rules/validation.md). Run `cargo test` from `src-tauri/` for applicable backend changes. In the [handoff](../../../templates/handoff.md), list tested operating-system/client combinations separately from combinations that remain unverified.

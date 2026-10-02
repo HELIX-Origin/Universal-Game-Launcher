@@ -1,17 +1,19 @@
-# Agent handoff template
+# 📬 Agent handoff
 
-## Assignment
+Use this template to return focused work to the lead. Be specific about what changed and what you verified; do not report assumptions as test results.
 
-Scope and acceptance criteria:
+## 🎯 Assignment
 
-## Findings and changes
+Describe the assigned scope and acceptance criteria:
 
-Relevant files, behavior, and root document updates:
+## 🔎 Findings and changes
 
-## Verification
+List affected files, behavior changed or reviewed, and any root-document updates:
 
-Commands and outcomes; OS/client smoke tests (if any); blockers:
+## 🧪 Verification
 
-## Remaining work
+Record exact commands and outcomes, operating-system/client smoke tests (if any), and blockers:
 
-Reproducible bugs, risks, and next action for the lead:
+## 🚧 Remaining work
+
+List reproducible bugs, risks, unresolved questions, and the recommended next action for the lead:
