@@ -4,7 +4,7 @@ Universal Game Launcher is a desktop application intended to bring games from mu
 
 Optional metadata enrichment uses **IGDB** in place of the discontinued RAWG API. Browsing locally discovered games does not require a store account or an online metadata service.
 
-> ⚠️ **Project status:** This project is early work in progress. The backend has store scanners and Tauri commands, but the Svelte page is still starter content and does not expose the library. The current window is **not a working game launcher**.
+> ⚠️ **Project status:** This project is early work in progress. An initial library interface now loads the backend snapshot and offers supported game actions, but it has not yet been smoke-tested in the desktop app with real store clients. Do not treat the current build as release-ready.
 
 ## 🧭 Start here
 
@@ -23,7 +23,7 @@ These documents describe the current project, known issues, priorities, and cont
 | Discovery | `src-tauri/src/stores/`, `src-tauri/src/library.rs` | Reads local store data and assembles library snapshots. |
 | Launching and user data | `src-tauri/src/launcher.rs`, `src-tauri/src/persistence.rs` | Validates launch targets and manages custom games and settings. |
 | Optional metadata | `src-tauri/src/metadata.rs` | Fetches opt-in metadata and reports API-key status. |
-| User interface | `src/routes/+page.svelte`, `src/lib/i18n/` | Currently starter UI and incomplete localization groundwork. |
+| User interface | `src/routes/+page.svelte`, `src/lib/i18n/` | Initial library screen with search, filters, and supported game actions; localization remains incomplete. |
 
 The application uses Tauri 2, Rust, SvelteKit, Svelte 5, TypeScript, and Vite. Store discovery depends on the operating system and installed client. Cloud services are user-added shortcuts, not automatically discovered libraries.
 

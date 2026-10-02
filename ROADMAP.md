@@ -4,10 +4,10 @@ This roadmap describes intended work; it is **not** a claim that the user interf
 
 ## 🎯 Now — deliver a usable first library
 
-- Replace the starter page with a library view powered by `get_library`.
-- Make loading, empty, refresh, and command-error states understandable to the user.
-- Connect `launch_game`, `install_game`, and `open_client` only when an entry supports the corresponding action. Surface failures instead of silently ignoring them.
-- Verify discovery and launch handoffs on supported operating systems with locally installed store clients. Record what was actually tested.
+- [x] Replace the starter page with a library view powered by `get_library`.
+- [x] Add understandable loading, empty, refresh, and command-error states.
+- [x] Connect launch and install actions only when an entry supports the action; surface failures.
+- [ ] Smoke-test the desktop UI and launch/install handoffs on supported operating systems with locally installed store clients. Record what was actually tested.
 
 ## 🧩 Next — personal library and settings
 

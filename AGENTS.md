@@ -1,13 +1,13 @@
 # 🤖 Agent guide
 
-Start with [README.md](README.md), then read [ROADMAP.md](ROADMAP.md), [BUGS.md](BUGS.md), and [TODO.md](TODO.md). The first priority is a usable library UI, not new store integrations. The current starter page is not a working launcher.
+Start with [README.md](README.md), then read [ROADMAP.md](ROADMAP.md), [BUGS.md](BUGS.md), and [TODO.md](TODO.md). The first priority is a usable library UI, not new store integrations. An initial library UI is in place; verify desktop behavior before describing it as a working launcher.
 
 ## 🧭 Code map and contracts
 
 - **Tauri commands and state:** `src-tauri/src/lib.rs` registers commands and initializes `AppState`; `src-tauri/src/library.rs` assembles library snapshots.
 - **Store discovery and models:** `src-tauri/src/stores/` reads local client data. `models.rs` defines platform IDs and launch targets; preserve stable serialized IDs when changing scanners.
 - **Launching, persistence, and metadata:** `src-tauri/src/launcher.rs` handles launch targets; `persistence.rs` manages user data and settings; `metadata.rs` provides opt-in enrichment and key status. Never log or commit credentials or private library data.
-- **Frontend and localization:** `src/routes/+page.svelte` is currently starter content. `src/lib/i18n/` contains an English catalog and locale registry, not a complete translated UI.
+- **Frontend and localization:** `src/routes/+page.svelte` contains the initial library interface. `src/lib/i18n/` contains an English catalog and locale registry, not a complete translated UI.
 - **Application boundary:** The frontend is a static SvelteKit SPA configured in `src/routes/+layout.ts`. Tauri commands are not browser-server endpoints. Keep TypeScript command names and serialized payloads consistent with Rust.
 
 ## 🧩 Agent ecosystem

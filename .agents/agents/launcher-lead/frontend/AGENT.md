@@ -2,7 +2,7 @@
 
 ## 📦 Scope
 
-Work in `src/`, SvelteKit configuration when necessary, and UI-facing documentation. The page at `src/routes/+page.svelte` is starter content, not a working launcher. For library tasks, follow the [library UI skill](../../../skills/library-ui/SKILL.md).
+Work in `src/`, SvelteKit configuration when necessary, and UI-facing documentation. `src/routes/+page.svelte` contains an initial library interface; desktop behavior still needs verification with Tauri and real client installations. For library tasks, follow the [library UI skill](../../../skills/library-ui/SKILL.md).
 
 ## 🔗 Frontend/backend contract
 
