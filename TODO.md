@@ -49,7 +49,7 @@ Only mark a verification item complete after recording its exact command or desk
 ## 📦 Release readiness still open
 
 - [ ] Add translated UI catalogs together with a selector; no non-English UI is currently shipped.
-- [x] Add frontend coverage for interactive settings and Tauri command/payload boundaries beyond the existing library and catalog tests. `npm run verify` passed on Ubuntu 24.04: unit 11, DOM 37, contracts 37, Rust unit 62, and Rust integration 18; `cargo clippy --all-targets -D warnings` was clean.
+- [x] Add frontend coverage for interactive settings and Tauri command/payload boundaries beyond the existing library and catalog tests. `npm run verify` passed on Ubuntu 24.04: unit 11, DOM 37 plus 1 expected failure documenting open bug B-04, contracts 37, Rust unit 62, and Rust integration 18; `cargo clippy --all-targets -- -D warnings` was clean.
 - [ ] Install and smoke-test Linux packages in a graphical environment; test Windows and macOS packages in their native environments.
 - [ ] Verify metadata key saving/status and live provider responses using disposable credentials supplied for testing.
 - [x] Review npm audit status: `npm audit --omit=dev` reports 0 production vulnerabilities; full `npm audit` reports 3 low-severity development-chain findings through `@sveltejs/kit@2.70.3` → `cookie@0.6.0`.

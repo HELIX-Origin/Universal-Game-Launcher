@@ -120,9 +120,9 @@ describe("library page: game actions", () => {
 
   it("offers no launch or install action for entries without a target", async () => {
     await renderLibrary();
-    expect(queryButtons(/Cloud Runner/).map((button) => button.getAttribute("aria-label"))).not.toContain(
-      expect.stringMatching(/^(Launch|Install) /),
-    );
+    const labels = queryButtons(/Cloud Runner/).map((button) => button.getAttribute("aria-label") ?? "");
+    expect(labels.length).toBeGreaterThan(0);
+    expect(labels.some((label) => /^(Launch|Install) /.test(label))).toBe(false);
   });
 
   it("translates backend error codes for failed launches", async () => {

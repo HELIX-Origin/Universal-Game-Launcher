@@ -214,6 +214,10 @@ const skipped = new Set(expand(options.skip.filter(Boolean)));
 const selected = expand(options.selection.length ? options.selection : ["all"]).filter(
   (name) => !skipped.has(name),
 );
+if (selected.length === 0) {
+  console.error("No suites selected after applying --skip.");
+  process.exit(2);
+}
 
 /** @type {{ name: string, status: "passed" | "failed" | "unavailable", seconds: number }[]} */
 const results = [];
