@@ -1,0 +1,92 @@
+[
+  {
+    "cloud": false,
+    "id": "steam",
+    "key": "steam",
+    "userManaged": false
+  },
+  {
+    "cloud": false,
+    "id": "epic",
+    "key": "epic",
+    "userManaged": false
+  },
+  {
+    "cloud": false,
+    "id": "gog",
+    "key": "gog",
+    "userManaged": false
+  },
+  {
+    "cloud": false,
+    "id": "humble",
+    "key": "humble",
+    "userManaged": false
+  },
+  {
+    "cloud": false,
+    "id": "itch",
+    "key": "itch",
+    "userManaged": false
+  },
+  {
+    "cloud": false,
+    "id": "ubisoft",
+    "key": "ubisoft",
+    "userManaged": false
+  },
+  {
+    "cloud": false,
+    "id": "ea",
+    "key": "ea",
+    "userManaged": false
+  },
+  {
+    "cloud": false,
+    "id": "origin",
+    "key": "origin",
+    "userManaged": false
+  },
+  {
+    "cloud": false,
+    "id": "xbox",
+    "key": "xbox",
+    "userManaged": false
+  },
+  {
+    "cloud": false,
+    "id": "amazon",
+    "key": "amazon",
+    "userManaged": false
+  },
+  {
+    "cloud": false,
+    "id": "battle-net",
+    "key": "battle-net",
+    "userManaged": false
+  },
+  {
+    "cloud": false,
+    "id": "lutris",
+    "key": "lutris",
+    "userManaged": false
+  },
+  {
+    "cloud": true,
+    "id": "geforce-now",
+    "key": "geforce-now",
+    "userManaged": true
+  },
+  {
+    "cloud": true,
+    "id": "xcloud",
+    "key": "xcloud",
+    "userManaged": true
+  },
+  {
+    "cloud": false,
+    "id": "local",
+    "key": "local",
+    "userManaged": true
+  }
+]

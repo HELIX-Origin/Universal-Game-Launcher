@@ -11,27 +11,10 @@
     type LibrarySnapshot,
     type Platform,
     type Filter,
+    type Settings,
+    type ApiKeyStatus,
+    type ApiKeyField,
   } from "$lib/library";
-
-    interface Settings {
-      disabledPlatforms: Platform[];
-      steamPath: string | null;
-      theme: string;
-      viewMode: string;
-      minimizeOnLaunch: boolean;
-      locale: string | null;
-      metadataProviders: string[];
-    }
-
-    interface ApiKeyStatus {
-      steamgriddb: boolean;
-      igdbClientId: boolean;
-      igdbClientSecret: boolean;
-      vndb: boolean;
-      rawg: boolean;
-    }
-
-    type ApiKeyField = "steamgriddb" | "igdbClientId" | "igdbClientSecret" | "vndb";
 
     type CustomPlatform = "local" | "geforce-now" | "xcloud";
     type Dialog = "add" | "settings" | null;

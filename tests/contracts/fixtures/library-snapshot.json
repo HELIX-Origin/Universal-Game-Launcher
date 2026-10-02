@@ -1,0 +1,134 @@
+{
+  "games": [
+    {
+      "coverUrl": "https://example.com/cover.png",
+      "custom": false,
+      "favorite": true,
+      "heroUrl": "https://example.com/hero.png",
+      "hidden": false,
+      "id": "steam:10",
+      "install": null,
+      "installDir": "/synthetic/games/installed",
+      "installed": true,
+      "lastPlayed": null,
+      "launch": {
+        "kind": "uri",
+        "uri": "steam://rungameid/10"
+      },
+      "metadata": {
+        "coverUrl": "https://example.com/cover.png",
+        "description": "Synthetic description.",
+        "developer": "Synthetic Studio",
+        "fetchedAt": 1700000000,
+        "genres": [
+          "Puzzle"
+        ],
+        "heroUrl": null,
+        "publisher": null,
+        "rating": 87.5,
+        "releaseDate": "2020-01-01",
+        "sources": [
+          "steamStore",
+          "igdb"
+        ]
+      },
+      "platform": "steam",
+      "playCount": 0,
+      "sizeBytes": null,
+      "storeId": "10",
+      "title": "Installed Game"
+    },
+    {
+      "coverUrl": null,
+      "custom": false,
+      "favorite": false,
+      "heroUrl": null,
+      "hidden": true,
+      "id": "gog:20",
+      "install": {
+        "kind": "uri",
+        "uri": "goggalaxy://openGameView/20"
+      },
+      "installDir": null,
+      "installed": false,
+      "lastPlayed": null,
+      "launch": {
+        "kind": "uri",
+        "uri": "goggalaxy://openGameView/20"
+      },
+      "metadata": null,
+      "platform": "gog",
+      "playCount": 0,
+      "sizeBytes": null,
+      "storeId": "20",
+      "title": "Owned Game"
+    },
+    {
+      "coverUrl": null,
+      "custom": true,
+      "favorite": false,
+      "heroUrl": null,
+      "hidden": false,
+      "id": "geforce-now:fixed-id",
+      "install": null,
+      "installDir": null,
+      "installed": true,
+      "lastPlayed": null,
+      "launch": {
+        "kind": "uri",
+        "uri": "https://play.geforcenow.com/games?game-id=synthetic"
+      },
+      "metadata": null,
+      "platform": "geforce-now",
+      "playCount": 0,
+      "sizeBytes": null,
+      "storeId": "fixed-id",
+      "title": "Cloud Game"
+    },
+    {
+      "coverUrl": null,
+      "custom": true,
+      "favorite": false,
+      "heroUrl": null,
+      "hidden": false,
+      "id": "local:local-id",
+      "install": null,
+      "installDir": "/synthetic/bin",
+      "installed": true,
+      "lastPlayed": null,
+      "launch": {
+        "args": [
+          "--windowed"
+        ],
+        "kind": "executable",
+        "path": "/synthetic/bin/game",
+        "workingDir": "/synthetic/bin"
+      },
+      "metadata": null,
+      "platform": "local",
+      "playCount": 0,
+      "sizeBytes": null,
+      "storeId": "local-id",
+      "title": "Local Game"
+    }
+  ],
+  "platforms": [
+    {
+      "canOpen": true,
+      "canOpenStore": true,
+      "enabled": true,
+      "error": null,
+      "gameCount": 1,
+      "platform": "steam"
+    },
+    {
+      "canOpen": false,
+      "canOpenStore": false,
+      "enabled": true,
+      "error": "synthetic scan failure",
+      "gameCount": 0,
+      "platform": "epic"
+    }
+  ],
+  "scannedAt": 1700000000
+}

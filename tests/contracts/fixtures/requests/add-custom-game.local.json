@@ -1,0 +1,8 @@
+{
+  "platform": "local",
+  "title": "Homebrew",
+  "executable": "/synthetic/bin/game",
+  "args": ["--windowed", "--fps", "60"],
+  "url": null,
+  "coverUrl": null
+}

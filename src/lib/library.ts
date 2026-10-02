@@ -59,6 +59,34 @@ export interface LibrarySnapshot {
   scannedAt: number;
 }
 
+/** Mirrors `persistence::Settings` in `src-tauri/src/persistence.rs`. */
+export interface Settings {
+  disabledPlatforms: Platform[];
+  steamPath: string | null;
+  theme: string;
+  viewMode: string;
+  minimizeOnLaunch: boolean;
+  locale: string | null;
+  metadataProviders: string[];
+}
+
+/** Mirrors `metadata::ApiKeyStatus`; the UI only learns whether a key is set. */
+export interface ApiKeyStatus {
+  steamgriddb: boolean;
+  igdbClientId: boolean;
+  igdbClientSecret: boolean;
+  vndb: boolean;
+  rawg: boolean;
+}
+
+export type ApiKeyField = "steamgriddb" | "igdbClientId" | "igdbClientSecret" | "vndb";
+
+/** Mirrors `error::AppError`, the rejection value of failed Tauri commands. */
+export interface CommandError {
+  code: string;
+  detail: string | null;
+}
+
 export type Filter = "all" | "installed" | "favorites" | "hidden";
 export type GameActionCommand = "launch_game" | "install_game";
 

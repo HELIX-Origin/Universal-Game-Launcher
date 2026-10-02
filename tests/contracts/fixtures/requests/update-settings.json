@@ -1,0 +1,9 @@
+{
+  "disabledPlatforms": ["steam"],
+  "steamPath": null,
+  "theme": "dark",
+  "viewMode": "grid",
+  "minimizeOnLaunch": true,
+  "locale": "en",
+  "metadataProviders": ["steamStore", "igdb"]
+}
