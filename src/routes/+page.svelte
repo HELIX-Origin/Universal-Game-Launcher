@@ -590,7 +590,7 @@
 
 {#if activeDialog === "add"}
   <div class="modal-backdrop">
-    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="add-title" tabindex="-1">
+    <dialog open class="modal" aria-modal="true" aria-labelledby="add-title">
       <div class="modal-heading">
         <div>
           <p class="eyebrow">PERSONAL LIBRARY</p>
@@ -646,17 +646,11 @@
           </button>
         </div>
       </form>
-    </section>
+    </dialog>
   </div>
 {:else if activeDialog === "settings"}
   <div class="modal-backdrop">
-    <section
-      class="modal settings-modal"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="settings-title"
-      tabindex="-1"
-    >
+    <dialog open class="modal settings-modal" aria-modal="true" aria-labelledby="settings-title">
       <div class="modal-heading">
         <div>
           <p class="eyebrow">PREFERENCES</p>
@@ -700,19 +694,13 @@
           </div>
         </form>
       {/if}
-    </section>
+    </dialog>
   </div>
 {/if}
 
 {#if pendingRemoval}
   <div class="modal-backdrop">
-    <section
-      class="modal confirm-modal"
-      role="alertdialog"
-      aria-modal="true"
-      aria-labelledby="remove-title"
-      tabindex="-1"
-    >
+    <dialog open class="modal confirm-modal" role="alertdialog" aria-modal="true" aria-labelledby="remove-title">
       <div class="modal-heading">
         <div>
           <p class="eyebrow">REMOVE CUSTOM GAME</p>
@@ -728,7 +716,7 @@
           {savingDialog ? "Removing…" : "Remove game"}
         </button>
       </div>
-    </section>
+    </dialog>
   </div>
 {/if}
 
@@ -1441,9 +1429,11 @@
   }
 
   .modal {
+    position: relative;
     width: min(100%, 480px);
     max-height: min(88vh, 760px);
     overflow-y: auto;
+    margin: auto;
     padding: 24px;
     border: 1px solid #383a40;
     border-radius: 13px;
