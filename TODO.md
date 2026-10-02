@@ -41,6 +41,7 @@ Use the [roadmap](ROADMAP.md) for broader milestones and [BUGS.md](BUGS.md) for 
 - RAWG API calls retired; IGDB retained as the replacement. Legacy RAWG configuration is not selectable or used for requests.
 - English UI messages now resolve through a typed catalog helper with placeholder interpolation; no translated UI dictionaries or locale selector are provided yet.
 - Backend unit tests passed, including RAWG request rejection and settings migration; tests used isolated fixtures and did not inspect real user store data.
+- Modular test suite (`npm run verify`, [tests/README.md](tests/README.md)): Vitest `unit`, `dom` (jsdom with mocked Tauri IPC), and `contracts` projects; Rust integration tests in `src-tauri/tests/`; golden Rust ↔ TypeScript payload fixtures; and a CI workflow. These tests use mocks and do not replace desktop smoke tests.
 - Linux desktop packaging succeeds on Ubuntu 24.04 and produces `.deb`, `.rpm`, and `.AppImage` bundles; package install/launch behavior has not been tested.
 
 Only mark a verification item complete after recording its exact command or desktop environment/result. Desktop validation is still blocked: this environment has no graphical session (`DISPLAY`/`WAYLAND_DISPLAY`) or installed Steam, Lutris, Heroic, or Flatpak clients. Windows/macOS packaging must be checked in native environments. No real store data was scanned.
@@ -48,7 +49,7 @@ Only mark a verification item complete after recording its exact command or desk
 ## 📦 Release readiness still open
 
 - [ ] Add translated UI catalogs together with a selector; no non-English UI is currently shipped.
-- [ ] Add frontend coverage for interactive settings and Tauri command/payload boundaries beyond the existing library and catalog tests.
+- [x] Add frontend coverage for interactive settings and Tauri command/payload boundaries beyond the existing library and catalog tests. `npm run verify` passed on Ubuntu 24.04: unit 11, DOM 37, contracts 37, Rust unit 62, and Rust integration 18; `cargo clippy --all-targets -D warnings` was clean.
 - [ ] Install and smoke-test Linux packages in a graphical environment; test Windows and macOS packages in their native environments.
 - [ ] Verify metadata key saving/status and live provider responses using disposable credentials supplied for testing.
 - [x] Review npm audit status: `npm audit --omit=dev` reports 0 production vulnerabilities; full `npm audit` reports 3 low-severity development-chain findings through `@sveltejs/kit@2.70.3` → `cookie@0.6.0`.
