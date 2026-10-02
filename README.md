@@ -23,7 +23,7 @@ These documents describe the current project, known issues, priorities, and cont
 | Discovery | `src-tauri/src/stores/`, `src-tauri/src/library.rs` | Reads local store data and assembles library snapshots. |
 | Launching and user data | `src-tauri/src/launcher.rs`, `src-tauri/src/persistence.rs` | Validates launch targets and manages custom games and settings. |
 | Optional metadata | `src-tauri/src/metadata.rs` | Fetches opt-in metadata from enabled providers, supports IGDB in place of discontinued RAWG, and reports key status without returning secret values. |
-| User interface | `src/routes/+page.svelte`, `src/lib/i18n/` | Library with search, filters, supported actions, custom local/cloud games, basic platform preferences, metadata-provider opt-in, and write-only credentials; localization remains incomplete. |
+| User interface | `src/routes/+page.svelte`, `src/lib/i18n/` | Library with search, filters, supported actions, custom local/cloud games, platform preferences, and metadata-provider/key management. UI copy uses the English source catalog; translated UI dictionaries and a language picker are not yet available. |
 
 The application uses Tauri 2, Rust, SvelteKit, Svelte 5, TypeScript, and Vite. Store discovery depends on the operating system and installed client. Cloud services are user-added shortcuts, not automatically discovered libraries.
 
@@ -42,7 +42,7 @@ npm run tauri dev
 ### 🔍 What the checks cover
 
 - `npm run check` checks the frontend types.
-- `npm test` runs the frontend library behavior and initial-state regression tests.
+- `npm test` runs frontend library, initial-state, and English-catalog regression tests.
 - `npm run build` packages the web frontend; it does not package the desktop application.
 - `npm run tauri dev` starts the desktop application and requires the Tauri system prerequisites.
 - To test the Rust backend, run `cargo test` from `src-tauri/`.

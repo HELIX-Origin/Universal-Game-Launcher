@@ -21,7 +21,6 @@ const en = {
     localLibrary: "Local library",
     collection: "Your collection",
     libraryEyebrow: "YOUR GAMES, ALL TOGETHER",
-    gamesAcrossPlatforms: "{games} games · {platforms} platforms",
     collectionSubtitle: "Your games from every store, in one place.",
     lastScan: "Last scan",
     rescan: "Rescan",
@@ -100,8 +99,6 @@ const en = {
     gameNotFound: "Game was not found",
     notScannedYet: "Not scanned yet",
     libraryError: "Couldn't load your library. Try again from the desktop app.",
-    language: "Language",
-    englishOnly: "English",
   },
   nav: {
     home: "Home",

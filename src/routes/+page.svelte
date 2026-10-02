@@ -37,10 +37,10 @@
     type Dialog = "add" | "settings" | null;
 
     const metadataProviders = [
-      { id: "steamGridDb", name: "SteamGridDB", hint: "Artwork, requires an API key.", keyRequired: true },
-      { id: "steamStore", name: "Steam Store", hint: "Descriptions and release information; no key required.", keyRequired: false },
-      { id: "igdb", name: "IGDB", hint: "Game information, requires Twitch developer client credentials.", keyRequired: true },
-      { id: "vndb", name: "VNDB", hint: "Visual novel information; token optional.", keyRequired: false },
+      { id: "steamGridDb", name: "SteamGridDB", hint: t("settings.providerHints.steamGridDb"), keyRequired: true },
+      { id: "steamStore", name: "Steam Store", hint: t("settings.providerHints.steamStore"), keyRequired: false },
+      { id: "igdb", name: "IGDB", hint: t("settings.providerHints.igdb"), keyRequired: true },
+      { id: "vndb", name: "VNDB", hint: t("settings.providerHints.vndb"), keyRequired: false },
     ] as const;
 
   const platformNames: Record<Platform, string> = {

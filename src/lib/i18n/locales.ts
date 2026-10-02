@@ -1,8 +1,7 @@
 /**
- * Registry of every UI locale. The list is the union of the UI languages
- * offered by the platforms the launcher supports (Steam, Epic, GOG, itch.io,
- * Ubisoft Connect, EA, Origin, Xbox / Microsoft Store, Amazon, Battle.net,
- * GeForce NOW, xbox.com). See docs/research/localization.md for sources.
+ * Registry of locale tags recognized for settings and metadata-provider
+ * requests. This is not a list of bundled UI translations; only English UI
+ * messages are currently available in `locales/en.ts`.
  *
  * Tag convention (BCP-47): bare language unless variants differ; Chinese uses
  * script subtags (zh-Hans / zh-Hant), Norwegian is `nb`, Latin-American
@@ -12,7 +11,7 @@
 export type TextDirection = "ltr" | "rtl";
 
 export interface LocaleInfo {
-  /** BCP-47 tag; also the dictionary file name in ./locales. */
+  /** Recognized BCP-47 locale tag. */
   code: string;
   /** English name (for search / docs). */
   englishName: string;

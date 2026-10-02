@@ -18,17 +18,18 @@ Use the [roadmap](ROADMAP.md) for broader milestones and [BUGS.md](BUGS.md) for 
 - [x] Select optional metadata providers and save/check write-only provider credentials.
 - [x] Request and display metadata for a selected game.
 - [x] Remove RAWG from selectable providers and prevent legacy settings from making RAWG network requests; keep legacy fields readable for old user data.
-- [ ] Reconcile the locale registry and English message catalog with the UI before claiming additional languages are supported.
+- [x] Wire the English source catalog through the library UI and clarify that locale tags do not mean translated UI dictionaries are bundled.
+- [ ] Add translated dictionaries and a language selector together before claiming additional UI languages are supported.
 
 ## 🧪 Verification still required
 
-- [x] Run frontend `npm test` (2 files, 8 tests passed), `npm run check` (0 errors, 0 warnings), and `npm run build` after metadata integration.
-- [ ] Run backend `cargo test --manifest-path /home/runner/work/Universal-Game-Launcher/Universal-Game-Launcher/src-tauri/Cargo.toml`; the attempt is blocked because GTK/GIO development libraries (`gio-2.0`, `glib-2.0`, and `gobject-2.0`) are unavailable in this environment.
+- [x] Run frontend `npm test` (3 files, 11 tests passed), `npm run check` (0 errors, 0 warnings), and `npm run build` after catalog integration.
+- [x] Run backend `cargo test --manifest-path /home/runner/work/Universal-Game-Launcher/Universal-Game-Launcher/src-tauri/Cargo.toml` (62 passed, 0 failed) after installing the Tauri GTK/WebKit system prerequisites.
 - [x] Run `cargo fmt --manifest-path /home/runner/work/Universal-Game-Launcher/Universal-Game-Launcher/src-tauri/Cargo.toml --check`.
 - [ ] Verify metadata providers and credentials in the desktop app without using real credentials in logs or fixtures.
-- [ ] Record successful execution of the RAWG-retirement and legacy-settings migration tests in [BUGS.md](BUGS.md) after the required system libraries are available.
+- [x] Record successful execution of the RAWG-retirement and legacy-settings migration tests in [BUGS.md](BUGS.md).
 - [ ] Validate scanners and launch actions on actual supported operating-system/client combinations; record reproducible issues in [BUGS.md](BUGS.md).
-- [ ] Keep [README.md](README.md), [ROADMAP.md](ROADMAP.md), [BUGS.md](BUGS.md), and this checklist aligned with verified behavior.
+- [x] Keep [README.md](README.md), [ROADMAP.md](ROADMAP.md), [BUGS.md](BUGS.md), and this checklist aligned with verified behavior.
 
 ## 🗂️ Implemented work record
 
@@ -37,5 +38,7 @@ Use the [roadmap](ROADMAP.md) for broader milestones and [BUGS.md](BUGS.md) for 
 - Favorite and hidden-state persistence; local/cloud custom-game add/remove; platform enablement; minimize-on-launch; install-folder opening.
 - Optional metadata-provider selection, write-only key management, and per-game metadata fetch/rendering.
 - RAWG API calls retired; IGDB retained as the replacement. Legacy RAWG configuration is not selectable or used for requests.
+- English UI messages now resolve through a typed catalog helper with placeholder interpolation; no translated UI dictionaries or locale selector are provided yet.
+- Backend unit tests passed, including RAWG request rejection and settings migration; tests used isolated fixtures and did not inspect real user store data.
 
-Only mark a verification item complete after recording its exact command or desktop environment/result.
+Only mark a verification item complete after recording its exact command or desktop environment/result. Desktop validation is still blocked: this environment has no graphical session (`DISPLAY`/`WAYLAND_DISPLAY`) or installed Steam, Lutris, Heroic, or Flatpak clients. No real store data was scanned.

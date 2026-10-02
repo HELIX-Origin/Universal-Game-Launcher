@@ -18,7 +18,8 @@ This roadmap describes intended work; it is **not** a claim that the user interf
 - [x] Retire RAWG network requests and remove legacy RAWG selections from settings while retaining stored enum/key fields for backward-compatible reads.
 - [ ] Verify provider requests, key saving/status, and metadata rendering from the running desktop app.
 - Keep third-party credentials optional: browsing the local library must not depend on them.
-- Connect the existing English message catalog to the UI. Add translated dictionaries only when the UI can select and use them.
+- [x] Connect user-facing library UI copy to the English source catalog and clarify that locale tags are not bundled UI translations.
+- [ ] Add translated dictionaries and a language selector together; do not advertise a locale as a supported UI language until its strings can be selected and displayed.
 
 ## 📚 Delivered milestones and records
 
@@ -26,7 +27,7 @@ This roadmap describes intended work; it is **not** a claim that the user interf
 - **Personal library:** added favorite and hide/unhide actions; add/remove local executable and cloud shortcut entries; open available install folders.
 - **Preferences:** configure enabled libraries and minimize-on-launch; choose opt-in metadata providers and save provider credentials without retrieving secret values.
 - **Metadata provider transition:** IGDB is used instead of RAWG. New settings do not offer RAWG, legacy saved RAWG selections are discarded when settings load/sanitize, and a legacy RAWG enum value cannot trigger a network request.
-- **Regression checks:** frontend tests cover startup loading, filters, and action eligibility; frontend tests, type checks, and build pass. Backend test cases cover provider parsing, secure key status, and RAWG request retirement; formatting passes, but Rust test execution is blocked by missing GTK/GIO system libraries. See [TODO.md](TODO.md) for exact commands and status.
+- **Regression checks:** frontend tests cover startup loading, filters, action eligibility, and catalog interpolation (11 tests pass); frontend type checks and build pass. All 62 backend unit tests pass, including provider parsing, key status, and RAWG retirement/migration; Rust formatting passes. Desktop/provider runtime behavior remains unverified; see [TODO.md](TODO.md).
 
 ## ✅ Later — prepare for release
 
