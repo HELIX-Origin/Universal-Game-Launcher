@@ -590,7 +590,7 @@
 
 {#if activeDialog === "add"}
   <div class="modal-backdrop">
-    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="add-title">
+    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="add-title" tabindex="-1">
       <div class="modal-heading">
         <div>
           <p class="eyebrow">PERSONAL LIBRARY</p>
@@ -650,7 +650,13 @@
   </div>
 {:else if activeDialog === "settings"}
   <div class="modal-backdrop">
-    <section class="modal settings-modal" role="dialog" aria-modal="true" aria-labelledby="settings-title">
+    <section
+      class="modal settings-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="settings-title"
+      tabindex="-1"
+    >
       <div class="modal-heading">
         <div>
           <p class="eyebrow">PREFERENCES</p>
@@ -700,7 +706,13 @@
 
 {#if pendingRemoval}
   <div class="modal-backdrop">
-    <section class="modal confirm-modal" role="alertdialog" aria-modal="true" aria-labelledby="remove-title">
+    <section
+      class="modal confirm-modal"
+      role="alertdialog"
+      aria-modal="true"
+      aria-labelledby="remove-title"
+      tabindex="-1"
+    >
       <div class="modal-heading">
         <div>
           <p class="eyebrow">REMOVE CUSTOM GAME</p>
