@@ -2,6 +2,7 @@
   import { onMount } from "svelte";
   import { invoke } from "@tauri-apps/api/core";
   import { open as openFileDialog } from "@tauri-apps/plugin-dialog";
+  import { t } from "$lib/i18n";
   import {
     filterLibraryGames,
     gameActionCommand,
@@ -61,9 +62,9 @@
   };
 
   const errorMessages: Record<string, string> = {
-    gameNotFound: "That game is no longer in your library. Rescan and try again.",
-    launchFailed: "The game action could not be started. Check that its official client is available.",
-    storage: "Your preference could not be saved.",
+    gameNotFound: t("errors.gameNotFound"),
+    launchFailed: t("errors.launchFailed"),
+    storage: t("errors.storage"),
   };
 
   let snapshot = $state<LibrarySnapshot | null>(null);
@@ -123,7 +124,7 @@
     try {
       snapshot = await invoke<LibrarySnapshot>("get_library", { refresh });
     } catch {
-      loadError = "Couldn't load your library. Try again from the desktop app.";
+      loadError = t("page.libraryError");
     } finally {
       loading = false;
       refreshing = false;
@@ -139,16 +140,15 @@
     notice = "";
     try {
       await invoke(command, { id: game.id });
-      notice =
-        command === "launch_game"
-          ? `Launch request sent for ${game.title}.`
-          : `Install request sent to ${platformNames[game.platform]}.`;
+      notice = command === "launch_game"
+        ? t("page.launchRequest", { title: game.title })
+        : t("page.installRequest", { platform: platformNames[game.platform] });
     } catch (error) {
       const code =
         typeof error === "object" && error !== null && "code" in error
           ? String(error.code)
           : "";
-      actionError = errorMessages[code] ?? "The requested game action failed. Please try again.";
+      actionError = errorMessages[code] ?? t("errors.internal");
     } finally {
       activeGameId = "";
     }
@@ -171,7 +171,7 @@
         };
       }
     } catch {
-      actionError = "Your favorite couldn't be saved. Please try again.";
+      actionError = t("page.favoriteSavedError");
     } finally {
       activeGameId = "";
     }
@@ -194,7 +194,7 @@
         };
       }
     } catch {
-      actionError = "This game's visibility couldn't be changed. Please try again.";
+      actionError = t("page.visibilitySavedError");
     } finally {
       activeGameId = "";
     }
@@ -212,8 +212,8 @@
       actionError =
         errorMessages[code] ??
         (code === "noInstallDir"
-          ? "No install folder is available for this game."
-          : "The install folder couldn't be opened.");
+          ? t("page.installFolderUnavailable")
+          : t("page.installFolderOpenError"));
     }
   }
 
@@ -254,7 +254,7 @@
       });
       if (snapshot) snapshot = { ...snapshot, games: [...snapshot.games, added] };
       activeDialog = null;
-      notice = `${added.title} was added to your library.`;
+      notice = t("page.addedNotice", { title: added.title });
     } catch (error) {
       const code =
         typeof error === "object" && error !== null && "code" in error
@@ -263,17 +263,17 @@
       dialogError =
         errorMessages[code] ??
         ({
-          titleRequired: "Enter a name for this game.",
-          titleTooLong: "Game names must be 200 characters or fewer.",
-          executableRequired: "Choose the game's executable.",
-          executableNotAbsolute: "Choose an executable using its full path.",
-          executableNotFound: "The selected executable could not be found.",
-          urlRequired: "Enter the game's cloud service link.",
-          urlNotHttps: "The cloud game link must start with https://.",
-          urlHostNotAllowed: "That link does not match the selected cloud service.",
-          invalidCoverUrl: "The cover image link must start with https://.",
-          unsupportedPlatform: "That platform cannot be added as a custom game.",
-        }[code] ?? "The game couldn't be added. Check the details and try again.");
+          titleRequired: t("errors.titleRequired"),
+          titleTooLong: t("errors.titleTooLong"),
+          executableRequired: t("errors.executableRequired"),
+          executableNotAbsolute: t("errors.executableNotAbsolute"),
+          executableNotFound: t("errors.executableNotFound"),
+          urlRequired: t("errors.urlRequired"),
+          urlNotHttps: t("errors.urlNotHttps"),
+          urlHostNotAllowed: t("errors.urlHostNotAllowed"),
+          invalidCoverUrl: t("errors.invalidCoverUrl"),
+          unsupportedPlatform: t("errors.unsupportedPlatform"),
+        }[code] ?? t("page.addGameError"));
     } finally {
       savingDialog = false;
     }
@@ -285,17 +285,17 @@
     dialogError = "";
     try {
       const removed = await invoke<boolean>("remove_custom_game", { id: pendingRemoval.id });
-      if (!removed) throw new Error("Game was not found");
+      if (!removed) throw new Error(t("page.gameNotFound"));
       if (snapshot) {
         snapshot = {
           ...snapshot,
           games: snapshot.games.filter((game) => game.id !== pendingRemoval?.id),
         };
       }
-      notice = `${pendingRemoval.title} was removed from your library. Its files were not deleted.`;
+      notice = t("page.removedNotice", { title: pendingRemoval.title });
       pendingRemoval = null;
     } catch {
-      dialogError = "The game couldn't be removed. Please try again.";
+      dialogError = t("page.gameRemovalError");
     } finally {
       savingDialog = false;
     }
@@ -316,7 +316,7 @@
       };
       apiKeyStatus = keyStatus;
     } catch {
-      dialogError = "Settings couldn't be loaded. Please try again.";
+      dialogError = t("page.settingsLoadError");
       activeDialog = null;
     } finally {
       savingDialog = false;
@@ -359,9 +359,9 @@
         igdbClientSecret: false,
         vndb: false,
       };
-      notice = "Credential status updated. Secret values are never returned to the UI.";
+      notice = t("page.credentialStatusUpdated");
     } catch {
-      dialogError = "Credentials couldn't be saved. Please try again.";
+      dialogError = t("page.credentialSaveError");
     } finally {
       savingDialog = false;
     }
@@ -383,7 +383,7 @@
           ),
         };
       }
-      notice = `Metadata updated for ${game.title}.`;
+      notice = t("page.metadataUpdatedNotice", { title: game.title });
     } catch (error) {
       const code =
         typeof error === "object" && error !== null && "code" in error
@@ -392,11 +392,11 @@
       actionError =
         errorMessages[code] ??
         ({
-          metadataNoProviders: "Enable a metadata provider in Settings first.",
-          metadataMissingKey: "Add the required provider credentials in Settings first.",
-          metadataNotFound: "No metadata was found for this game.",
-          metadataRequestFailed: "The metadata service could not be reached.",
-        }[code] ?? "Game metadata couldn't be fetched.");
+          metadataNoProviders: t("page.metadataNoProviders"),
+          metadataMissingKey: t("page.metadataMissingKey"),
+          metadataNotFound: t("errors.metadataNotFound"),
+          metadataRequestFailed: t("errors.metadataRequestFailed"),
+        }[code] ?? t("page.metadataFetchError"));
     } finally {
       fetchingMetadataId = "";
     }
@@ -419,16 +419,16 @@
       settings = await invoke<Settings>("update_settings", { settings });
       activeDialog = null;
       await loadLibrary(true);
-      notice = "Settings saved.";
+      notice = t("page.settingsSaved");
     } catch {
-      dialogError = "Settings couldn't be saved. Please try again.";
+      dialogError = t("page.settingsSaveError");
     } finally {
       savingDialog = false;
     }
   }
 
   function formatScanTime(seconds: number) {
-    if (!seconds) return "Not scanned yet";
+    if (!seconds) return t("page.notScannedYet");
     return new Intl.DateTimeFormat(undefined, {
       dateStyle: "medium",
       timeStyle: "short",
@@ -437,7 +437,7 @@
 </script>
 
 <svelte:head>
-  <title>Library · Universal Game Launcher</title>
+  <title>{t("nav.library")} · {t("app.name")}</title>
   <meta
     name="description"
     content="Browse and launch games from your installed store clients in one library."
@@ -445,69 +445,70 @@
 </svelte:head>
 
 <div class="app-shell">
-  <aside class="sidebar" aria-label="Main navigation">
-    <a class="brand" href="#library" aria-label="Universal Game Launcher home">
+  <aside class="sidebar" aria-label={t("page.mainNavigation")}>
+    <a class="brand" href="#library" aria-label={t("app.name")}>
       <span class="brand-mark" aria-hidden="true">U</span>
       <span class="brand-name">universal<span>launcher</span></span>
     </a>
 
-    <div class="sidebar-label">Library</div>
+    <div class="sidebar-label">{t("nav.library")}</div>
     <button class:active={filter === "all"} class="nav-link" onclick={() => (filter = "all")}>
       <span class="nav-icon" aria-hidden="true">▦</span>
-      All games
+      {t("page.allGames")}
     </button>
     <button class:active={filter === "favorites"} class="nav-link" onclick={() => (filter = "favorites")}>
-      <span class="nav-icon" aria-hidden="true">♡</span>Favorites
+      <span class="nav-icon" aria-hidden="true">♡</span>{t("nav.favorites")}
     </button>
     <button class:active={filter === "hidden"} class="nav-link" onclick={() => (filter = "hidden")}>
-      <span class="nav-icon" aria-hidden="true">◌</span>Hidden
+      <span class="nav-icon" aria-hidden="true">◌</span>{t("nav.hidden")}
     </button>
 
-    <div class="sidebar-label tools-label">Manage</div>
+    <div class="sidebar-label tools-label">{t("page.manage")}</div>
     <button class="nav-link" onclick={openAddGame}>
-      <span class="nav-icon" aria-hidden="true">＋</span>Add game
+      <span class="nav-icon" aria-hidden="true">＋</span>{t("nav.addGame")}
     </button>
     <button class="nav-link" onclick={openSettings}>
-      <span class="nav-icon" aria-hidden="true">⚙</span>Settings
+      <span class="nav-icon" aria-hidden="true">⚙</span>{t("nav.settings")}
     </button>
 
     <div class="sidebar-footer">
       <span class="status-dot" aria-hidden="true"></span>
-      <span>Local library</span>
+      <span>{t("page.localLibrary")}</span>
     </div>
   </aside>
 
   <main id="library" class="main-content">
     <header class="topbar">
-      <div class="breadcrumb">Your collection <span>/</span> Library</div>
+      <div class="breadcrumb">{t("page.collection")} <span>/</span> {t("nav.library")}</div>
       <button
         class="refresh-button"
         onclick={() => loadLibrary(true)}
         disabled={loading || refreshing}
-        aria-label={refreshing ? "Rescanning libraries" : "Rescan libraries"}
+        aria-label={refreshing ? t("library.scanning") : t("library.refresh")}
       >
         <span class:spinning={refreshing} aria-hidden="true">↻</span>
-        {refreshing ? "Scanning…" : "Rescan"}
+        {refreshing ? t("page.scanning") : t("page.rescan")}
       </button>
     </header>
 
     <section class="page-heading" aria-labelledby="page-title">
       <div>
-        <p class="eyebrow">YOUR GAMES, ALL TOGETHER</p>
-        <h1 id="page-title">Library</h1>
+        <p class="eyebrow">{t("page.libraryEyebrow")}</p>
+        <h1 id="page-title">{t("nav.library")}</h1>
         <p class="subtitle">
           {#if snapshot}
-            {filter === "hidden"
+            {@const games = filter === "hidden"
               ? snapshot.games.filter((game) => game.hidden).length
-              : snapshot.games.filter((game) => !game.hidden).length} games ·
-            {snapshot.platforms.filter((platform) => platform.gameCount > 0).length} platforms
+              : snapshot.games.filter((game) => !game.hidden).length}
+            {@const platforms = snapshot.platforms.filter((platform) => platform.gameCount > 0).length}
+            {t(games === 1 ? "home.stats.one" : "home.stats.other", { count: games, platforms })}
           {:else}
-            Your games from every store, in one place.
+            {t("page.collectionSubtitle")}
           {/if}
         </p>
       </div>
       {#if snapshot}
-        <div class="last-scan">Last scan <strong>{formatScanTime(snapshot.scannedAt)}</strong></div>
+        <div class="last-scan">{t("page.lastScan")} <strong>{formatScanTime(snapshot.scannedAt)}</strong></div>
       {/if}
     </section>
 
@@ -516,7 +517,7 @@
       {#if platformErrors.length > 0}
         <div class="scan-warning" role="status">
           <span aria-hidden="true">!</span>
-          Some libraries couldn't be scanned. Check that their store apps are installed and try again.
+          {t("page.someLibrariesFailed")}
         </div>
       {/if}
     {/if}
@@ -524,7 +525,7 @@
     {#if actionError}
       <div class="message error-message" role="alert">
         {actionError}
-        <button class="message-dismiss" onclick={() => (actionError = "")} aria-label="Dismiss error">
+        <button class="message-dismiss" onclick={() => (actionError = "")} aria-label={t("page.dismissError")}>
           ×
         </button>
       </div>
@@ -532,45 +533,45 @@
     {#if notice}
       <div class="message success-message" role="status">
         {notice}
-        <button class="message-dismiss" onclick={() => (notice = "")} aria-label="Dismiss message">
+        <button class="message-dismiss" onclick={() => (notice = "")} aria-label={t("page.dismissMessage")}>
           ×
         </button>
       </div>
     {/if}
 
-    <section class="library-tools" aria-label="Library controls">
+    <section class="library-tools" aria-label={t("page.libraryControls")}>
       <label class="search-box">
         <span aria-hidden="true">⌕</span>
-        <span class="visually-hidden">Search games</span>
-        <input bind:value={query} placeholder="Search your games…" type="search" />
+        <span class="visually-hidden">{t("page.searchGames")}</span>
+        <input bind:value={query} placeholder={t("library.searchPlaceholder")} type="search" />
         {#if query}
-          <button class="clear-search" onclick={() => (query = "")} aria-label="Clear search">×</button>
+          <button class="clear-search" onclick={() => (query = "")} aria-label={t("page.clearSearch")}>×</button>
         {/if}
       </label>
-      <div class="filter-tabs" aria-label="Filter games">
+      <div class="filter-tabs" aria-label={t("page.filterGames")}>
         <button class:chosen={filter === "all"} aria-pressed={filter === "all"} onclick={() => (filter = "all")}>
-          All games
+          {t("page.allGames")}
         </button>
         <button
           class:chosen={filter === "installed"}
           aria-pressed={filter === "installed"}
           onclick={() => (filter = "installed")}
         >
-          Installed
+          {t("nav.installed")}
         </button>
         <button
           class:chosen={filter === "favorites"}
           aria-pressed={filter === "favorites"}
           onclick={() => (filter = "favorites")}
         >
-          Favorites
+          {t("nav.favorites")}
         </button>
         <button
           class:chosen={filter === "hidden"}
           aria-pressed={filter === "hidden"}
           onclick={() => (filter = "hidden")}
         >
-          Hidden
+          {t("nav.hidden")}
         </button>
       </div>
     </section>
@@ -578,40 +579,39 @@
     {#if loading}
       <section class="loading-state" aria-live="polite">
         <div class="loading-spinner" aria-hidden="true"></div>
-        <h2>Finding your games</h2>
-        <p>Checking your enabled libraries. This may take a moment.</p>
+        <h2>{t("page.findingGames")}</h2>
+        <p>{t("page.checkingLibraries")}</p>
       </section>
     {:else if loadError}
       <section class="empty-state" role="alert">
         <div class="empty-icon" aria-hidden="true">↻</div>
-        <h2>Library unavailable</h2>
+        <h2>{t("page.libraryUnavailable")}</h2>
         <p>{loadError}</p>
-        <button class="primary-button" onclick={() => loadLibrary()}>Try again</button>
+        <button class="primary-button" onclick={() => loadLibrary()}>{t("page.tryAgain")}</button>
       </section>
     {:else if visibleGames.length === 0}
       <section class="empty-state">
         <div class="empty-icon" aria-hidden="true">{snapshot?.games.length ? "⌕" : "▦"}</div>
         {#if snapshot?.games.length}
-          <h2>No games match your filters</h2>
-          <p>Try a different search or filter, or rescan your libraries.</p>
+          <h2>{t("page.noGamesMatch")}</h2>
+          <p>{t("page.changeSearchOrFilter")}</p>
           <button
             class="secondary-button"
             onclick={() => {
               query = "";
               filter = "all";
-            }}>Clear filters</button
+            }}>{t("library.clearFilters")}</button
           >
         {:else}
-          <h2>Your library is ready for games</h2>
+          <h2>{t("page.libraryReady")}</h2>
           <p>
-            Install games with their official store apps, then rescan to find them here. You can also
-            add local games and cloud shortcuts from the app's settings.
+            {t("page.emptyLibraryHint")}
           </p>
-          <button class="secondary-button" onclick={() => loadLibrary(true)}>Rescan libraries</button>
+          <button class="secondary-button" onclick={() => loadLibrary(true)}>{t("library.refresh")}</button>
         {/if}
       </section>
     {:else}
-      <section class="game-grid" aria-label="Games">
+      <section class="game-grid" aria-label={t("page.games")}>
         {#each visibleGames as game (game.id)}
           <article class="game-card">
             <div class="cover-wrap">
@@ -628,14 +628,16 @@
                 </div>
               {/if}
               <span class:installed={game.installed} class="game-status">
-                {game.custom ? "Added by you" : game.installed ? "Installed" : game.install ? "Not installed" : "Cloud"}
+                {game.custom ? t("page.addedByYou") : game.installed ? t("game.status.installed") : game.install ? t("game.status.notInstalled") : t("game.status.cloud")}
               </span>
               <button
                 class:favorite-active={game.favorite}
                 class="favorite-button"
                 onclick={() => toggleFavorite(game)}
                 disabled={activeGameId === game.id}
-                aria-label={game.favorite ? `Remove ${game.title} from favorites` : `Add ${game.title} to favorites`}
+                aria-label={game.favorite
+                  ? t("game.unfavorite") + `: ${game.title}`
+                  : t("game.favorite") + `: ${game.title}`}
                 aria-pressed={game.favorite}
               >
                 {game.favorite ? "♥" : "♡"}
@@ -644,8 +646,8 @@
                 class="visibility-button"
                 onclick={() => toggleHidden(game)}
                 disabled={activeGameId === game.id}
-                aria-label={game.hidden ? `Show ${game.title} in library` : `Hide ${game.title}`}
-                title={game.hidden ? "Show in library" : "Hide game"}
+                aria-label={game.hidden ? `${t("game.unhide")}: ${game.title}` : `${t("game.hide")}: ${game.title}`}
+                title={game.hidden ? t("game.unhide") : t("game.hide")}
               >
                 {game.hidden ? "◉" : "⊘"}
               </button>
@@ -656,16 +658,16 @@
                     dialogError = "";
                     pendingRemoval = game;
                   }}
-                  aria-label={`Remove ${game.title} from library`}
-                  title="Remove from library"
+                  aria-label={t("page.removeTitle", { title: game.title })}
+                  title={t("game.remove")}
                 >×</button>
               {/if}
               {#if game.installDir}
                 <button
                   class="folder-button"
                   onclick={() => openInstallFolder(game)}
-                  aria-label={`Open install folder for ${game.title}`}
-                  title="Open install folder"
+                  aria-label={t("page.openInstallFolderFor", { title: game.title })}
+                  title={t("game.openFolder")}
                 >↗</button>
               {/if}
               <div class="cover-shade"></div>
@@ -680,7 +682,9 @@
                   class="game-action"
                   onclick={() => runGameAction(game)}
                   disabled={activeGameId === game.id}
-                  aria-label={`${game.installed ? "Launch" : "Install"} ${game.title}`}
+                  aria-label={game.installed
+                    ? t("page.launchTitle", { title: game.title })
+                    : t("page.installTitle", { title: game.title })}
                 >
                   {#if activeGameId === game.id}
                     <span class="small-spinner" aria-hidden="true"></span>
@@ -711,10 +715,10 @@
               disabled={fetchingMetadataId === game.id || Boolean(fetchingMetadataId)}
             >
               {fetchingMetadataId === game.id
-                ? "Fetching details…"
+                ? t("page.fetchingDetails")
                 : game.metadata
-                  ? "Refresh details"
-                  : "Fetch details"}
+                  ? t("page.refreshDetails")
+                  : t("page.fetchDetails")}
             </button>
           </article>
         {/each}
@@ -723,9 +727,9 @@
 
     {#if snapshot && !loading && visibleGames.length > 0}
       <p class="results-count">
-        Showing {visibleGames.length} of {filter === "hidden"
+        {t("page.showingResults", { visible: visibleGames.length, total: filter === "hidden"
           ? snapshot.games.filter((game) => game.hidden).length
-          : snapshot.games.filter((game) => !game.hidden).length} games
+          : snapshot.games.filter((game) => !game.hidden).length })}
       </p>
     {/if}
   </main>
@@ -736,39 +740,39 @@
     <dialog open class="modal" aria-modal="true" aria-labelledby="add-title">
       <div class="modal-heading">
         <div>
-          <p class="eyebrow">PERSONAL LIBRARY</p>
-          <h2 id="add-title">Add a game</h2>
+          <p class="eyebrow">{t("page.personalLibrary")}</p>
+          <h2 id="add-title">{t("addGame.title")}</h2>
         </div>
-        <button class="message-dismiss" onclick={() => (activeDialog = null)} aria-label="Close">×</button>
+        <button class="message-dismiss" onclick={() => (activeDialog = null)} aria-label={t("page.close")}>×</button>
       </div>
       <form onsubmit={addCustomGame}>
         <label class="form-field">
-          <span>Game type</span>
+          <span>{t("page.gameType")}</span>
           <select bind:value={newPlatform}>
-            <option value="local">Local game</option>
-            <option value="geforce-now">GeForce NOW shortcut</option>
-            <option value="xcloud">Xbox Cloud Gaming shortcut</option>
+            <option value="local">{t("addGame.tabs.local")}</option>
+            <option value="geforce-now">{t("page.geforceShortcut")}</option>
+            <option value="xcloud">{t("page.xcloudShortcut")}</option>
           </select>
         </label>
         <label class="form-field">
-          <span>Name</span>
-          <input bind:value={newTitle} maxlength="200" required placeholder="Game name" />
+          <span>{t("addGame.name")}</span>
+          <input bind:value={newTitle} maxlength="200" required placeholder={t("page.gameName")} />
         </label>
         {#if newPlatform === "local"}
           <div class="form-field">
-            <span>Executable</span>
+              <span>{t("addGame.executable")}</span>
             <div class="file-picker">
-              <input value={newExecutable} readonly placeholder="Choose the game executable" />
-              <button class="secondary-button" type="button" onclick={chooseExecutable}>Browse…</button>
+                <input value={newExecutable} readonly placeholder={t("addGame.pickExecutable")} />
+                <button class="secondary-button" type="button" onclick={chooseExecutable}>{t("addGame.browse")}</button>
             </div>
           </div>
           <label class="form-field">
-            <span>Launch arguments <small>Optional, separated by spaces</small></span>
-            <input bind:value={newArgs} placeholder="-windowed" />
+            <span>{t("addGame.arguments")} <small>{t("page.optionalSeparatedBySpaces")}</small></span>
+            <input bind:value={newArgs} placeholder={t("addGame.argumentsPlaceholder")} />
           </label>
         {:else}
           <label class="form-field">
-            <span>Game link</span>
+            <span>{t("addGame.url")}</span>
             <input
               bind:value={newUrl}
               type="url"
@@ -778,14 +782,14 @@
           </label>
         {/if}
         <label class="form-field">
-          <span>Cover image URL <small>Optional, HTTPS only</small></span>
+          <span>{t("addGame.coverUrl")} <small>{t("page.httpsOnly")}</small></span>
           <input bind:value={newCoverUrl} type="url" placeholder="https://…" />
         </label>
         {#if dialogError}<p class="form-error" role="alert">{dialogError}</p>{/if}
         <div class="modal-actions">
-          <button class="secondary-button" type="button" onclick={() => (activeDialog = null)}>Cancel</button>
+          <button class="secondary-button" type="button" onclick={() => (activeDialog = null)}>{t("addGame.cancel")}</button>
           <button class="primary-button" type="submit" disabled={savingDialog}>
-            {savingDialog ? "Adding…" : "Add to library"}
+            {savingDialog ? t("page.adding") : t("addGame.submit")}
           </button>
         </div>
       </form>
@@ -796,18 +800,18 @@
     <dialog open class="modal settings-modal" aria-modal="true" aria-labelledby="settings-title">
       <div class="modal-heading">
         <div>
-          <p class="eyebrow">PREFERENCES</p>
-          <h2 id="settings-title">Settings</h2>
+          <p class="eyebrow">{t("page.preferences")}</p>
+          <h2 id="settings-title">{t("settings.title")}</h2>
         </div>
-        <button class="message-dismiss" onclick={() => (activeDialog = null)} aria-label="Close">×</button>
+        <button class="message-dismiss" onclick={() => (activeDialog = null)} aria-label={t("page.close")}>×</button>
       </div>
       {#if !settings && savingDialog}
-        <div class="settings-loading" role="status">Loading settings…</div>
+        <div class="settings-loading" role="status">{t("page.settingsLoading")}</div>
       {:else if settings}
         <form onsubmit={saveSettings}>
           <fieldset class="platform-options">
-            <legend>Enabled libraries</legend>
-            <p class="field-hint">Disabled libraries are not scanned or shown in your collection.</p>
+            <legend>{t("page.enabledLibraries")}</legend>
+            <p class="field-hint">{t("page.disabledLibrariesHint")}</p>
             {#each Object.entries(platformNames) as [platform, name]}
               <label class="platform-option">
                 <span>{name}</span>
@@ -820,7 +824,7 @@
             {/each}
           </fieldset>
           <label class="platform-option preference-option">
-            <span>Minimize the launcher when a game starts</span>
+            <span>{t("settings.minimizeOnLaunch")}</span>
             <input
               type="checkbox"
               checked={settings.minimizeOnLaunch}
@@ -829,10 +833,9 @@
             />
           </label>
           <fieldset class="provider-options">
-            <legend>Optional metadata providers</legend>
+            <legend>{t("settings.metadataProviders")}</legend>
             <p class="field-hint">
-              Nothing is fetched unless you enable a provider and request details for a game. RAWG is
-              discontinued and unavailable; IGDB is supported instead.
+              {t("page.rawgNotice")}
             </p>
             {#each metadataProviders as provider}
               <label class="provider-option">
@@ -849,80 +852,79 @@
             {/each}
           </fieldset>
           <fieldset class="credential-options">
-            <legend>Provider credentials</legend>
+            <legend>{t("settings.sections.metadata")}</legend>
             <p class="field-hint">
-              Secrets are stored locally and never returned to the UI. Leave a field blank to keep its
-              saved value, or choose Clear to remove it.
+              {t("page.credentialHint")}
             </p>
             <label class="form-field">
-              <span>SteamGridDB API key {apiKeyStatus?.steamgriddb ? "· Saved" : "· Not set"}</span>
+              <span>SteamGridDB {t("settings.apiKey")} {apiKeyStatus?.steamgriddb ? `· ${t("settings.keySaved")}` : `· ${t("settings.keyNotSet")}`}</span>
               <input
                 type="password"
                 autocomplete="new-password"
                 bind:value={apiKeyDrafts.steamgriddb}
-                placeholder="Enter a new key"
+                placeholder={t("page.enterNewKey")}
               />
               {#if apiKeyStatus?.steamgriddb}
                 <span class="clear-key">
                   <input type="checkbox" bind:checked={clearApiKeys.steamgriddb} />
-                  Clear saved key
+                  {t("page.clearSavedKey")}
                 </span>
               {/if}
             </label>
             <label class="form-field">
-              <span>IGDB / Twitch client ID {apiKeyStatus?.igdbClientId ? "· Saved" : "· Not set"}</span>
+              <span>IGDB / Twitch {t("settings.clientId")} {apiKeyStatus?.igdbClientId ? `· ${t("settings.keySaved")}` : `· ${t("settings.keyNotSet")}`}</span>
               <input
                 type="password"
                 autocomplete="new-password"
                 bind:value={apiKeyDrafts.igdbClientId}
-                placeholder="Enter a new client ID"
+                placeholder={t("page.enterNewClientId")}
               />
               {#if apiKeyStatus?.igdbClientId}
                 <span class="clear-key">
                   <input type="checkbox" bind:checked={clearApiKeys.igdbClientId} />
-                  Clear saved client ID
+                  {t("page.clearSavedClientId")}
                 </span>
               {/if}
             </label>
             <label class="form-field">
-              <span>IGDB / Twitch client secret {apiKeyStatus?.igdbClientSecret ? "· Saved" : "· Not set"}</span>
+              <span>IGDB / Twitch {t("settings.clientSecret")} {apiKeyStatus?.igdbClientSecret ? `· ${t("settings.keySaved")}` : `· ${t("settings.keyNotSet")}`}</span>
               <input
                 type="password"
                 autocomplete="new-password"
                 bind:value={apiKeyDrafts.igdbClientSecret}
-                placeholder="Enter a new client secret"
+                placeholder={t("page.enterNewClientSecret")}
               />
               {#if apiKeyStatus?.igdbClientSecret}
                 <span class="clear-key">
                   <input type="checkbox" bind:checked={clearApiKeys.igdbClientSecret} />
-                  Clear saved client secret
+                  {t("page.clearSavedClientSecret")}
                 </span>
               {/if}
             </label>
             <label class="form-field">
-              <span>VNDB token {apiKeyStatus?.vndb ? "· Saved" : "· Not set"} <small>Optional</small></span>
+              <span>VNDB {t("settings.apiKey")} {apiKeyStatus?.vndb ? `· ${t("settings.keySaved")}` : `· ${t("settings.keyNotSet")}`} <small>{t("settings.keyOptional")}</small></span>
               <input
                 type="password"
                 autocomplete="new-password"
                 bind:value={apiKeyDrafts.vndb}
-                placeholder="Enter a new token"
+                placeholder={t("page.enterNewToken")}
               />
               {#if apiKeyStatus?.vndb}
                 <span class="clear-key">
                   <input type="checkbox" bind:checked={clearApiKeys.vndb} />
-                  Clear saved token
+                  {t("page.clearSavedToken")}
                 </span>
               {/if}
             </label>
             <button class="secondary-button save-keys" type="button" onclick={saveApiKeys} disabled={savingDialog}>
-              Save credentials
+              {t("settings.saveKeys")}
             </button>
           </fieldset>
           {#if dialogError}<p class="form-error" role="alert">{dialogError}</p>{/if}
           <div class="modal-actions">
-            <button class="secondary-button" type="button" onclick={() => (activeDialog = null)}>Cancel</button>
+            <button class="secondary-button" type="button" onclick={() => (activeDialog = null)}>{t("addGame.cancel")}</button>
             <button class="primary-button" type="submit" disabled={savingDialog}>
-              {savingDialog ? "Saving…" : "Save settings"}
+              {savingDialog ? t("settings.saving") : t("settings.saveSettings")}
             </button>
           </div>
         </form>
@@ -936,17 +938,17 @@
     <dialog open class="modal confirm-modal" role="alertdialog" aria-modal="true" aria-labelledby="remove-title">
       <div class="modal-heading">
         <div>
-          <p class="eyebrow">REMOVE CUSTOM GAME</p>
-          <h2 id="remove-title">Remove {pendingRemoval.title}?</h2>
+          <p class="eyebrow">{t("game.remove")}</p>
+          <h2 id="remove-title">{t("game.removeConfirm", { title: pendingRemoval.title })}</h2>
         </div>
-        <button class="message-dismiss" onclick={() => (pendingRemoval = null)} aria-label="Close">×</button>
+        <button class="message-dismiss" onclick={() => (pendingRemoval = null)} aria-label={t("page.close")}>×</button>
       </div>
-      <p class="field-hint">This removes the entry from your library only. Files on disk are not deleted.</p>
+      <p class="field-hint">{t("page.removalNotice")}</p>
       {#if dialogError}<p class="form-error" role="alert">{dialogError}</p>{/if}
       <div class="modal-actions">
-        <button class="secondary-button" onclick={() => (pendingRemoval = null)}>Cancel</button>
+        <button class="secondary-button" onclick={() => (pendingRemoval = null)}>{t("addGame.cancel")}</button>
         <button class="danger-button" onclick={removeCustomGame} disabled={savingDialog}>
-          {savingDialog ? "Removing…" : "Remove game"}
+          {savingDialog ? t("page.removing") : t("page.removeGame")}
         </button>
       </div>
     </dialog>
