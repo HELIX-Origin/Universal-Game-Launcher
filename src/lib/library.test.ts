@@ -32,6 +32,7 @@ function game(
     install: null,
     coverUrl: null,
     heroUrl: null,
+    installDir: null,
     favorite: false,
     hidden: false,
     custom: false,

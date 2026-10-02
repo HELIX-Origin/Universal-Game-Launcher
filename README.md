@@ -23,7 +23,7 @@ These documents describe the current project, known issues, priorities, and cont
 | Discovery | `src-tauri/src/stores/`, `src-tauri/src/library.rs` | Reads local store data and assembles library snapshots. |
 | Launching and user data | `src-tauri/src/launcher.rs`, `src-tauri/src/persistence.rs` | Validates launch targets and manages custom games and settings. |
 | Optional metadata | `src-tauri/src/metadata.rs` | Fetches opt-in metadata and reports API-key status. |
-| User interface | `src/routes/+page.svelte`, `src/lib/i18n/` | Initial library screen with search, filters, and supported game actions; localization remains incomplete. |
+| User interface | `src/routes/+page.svelte`, `src/lib/i18n/` | Library with search, filters, supported actions, custom local/cloud games, and basic platform preferences; localization remains incomplete. |
 
 The application uses Tauri 2, Rust, SvelteKit, Svelte 5, TypeScript, and Vite. Store discovery depends on the operating system and installed client. Cloud services are user-added shortcuts, not automatically discovered libraries.
 

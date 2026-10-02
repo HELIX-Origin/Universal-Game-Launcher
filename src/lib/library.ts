@@ -27,6 +27,7 @@ export interface GameEntry {
   install: LaunchTarget | null;
   coverUrl: string | null;
   heroUrl: string | null;
+  installDir: string | null;
   favorite: boolean;
   hidden: boolean;
   custom: boolean;

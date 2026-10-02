@@ -13,7 +13,9 @@ Use the [roadmap](ROADMAP.md) for broader milestones and [BUGS.md](BUGS.md) for 
 ## ⚙️ Personal library and settings
 
 - [x] Expose favorites and hidden-game management through the existing backend commands.
-- [ ] Add UI flows for creating/removing custom games and editing launcher settings.
+- [x] Add/remove local games and GeForce NOW/Xbox Cloud shortcuts; edit enabled libraries and minimize-on-launch preference.
+- [x] Open a game's install folder when the backend provides a valid location.
+- [ ] Add UI controls for metadata provider settings and API-key status.
 - [ ] Reconcile the locale registry and English message catalog with the UI before claiming additional languages are supported.
 
 ## 🧪 Verification and documentation

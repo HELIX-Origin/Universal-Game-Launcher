@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import { invoke } from "@tauri-apps/api/core";
+  import { open as openFileDialog } from "@tauri-apps/plugin-dialog";
   import {
     filterLibraryGames,
     gameActionCommand,
@@ -9,6 +10,19 @@
     type Platform,
     type Filter,
   } from "$lib/library";
+
+    interface Settings {
+      disabledPlatforms: Platform[];
+      steamPath: string | null;
+      theme: string;
+      viewMode: string;
+      minimizeOnLaunch: boolean;
+      locale: string | null;
+      metadataProviders: string[];
+    }
+
+    type CustomPlatform = "local" | "geforce-now" | "xcloud";
+    type Dialog = "add" | "settings" | null;
 
   const platformNames: Record<Platform, string> = {
     steam: "Steam",
@@ -43,6 +57,17 @@
   let actionError = $state("");
   let notice = $state("");
   let activeGameId = $state("");
+  let activeDialog = $state<Dialog>(null);
+  let dialogError = $state("");
+  let savingDialog = $state(false);
+  let settings = $state<Settings | null>(null);
+  let newPlatform = $state<CustomPlatform>("local");
+  let newTitle = $state("");
+  let newExecutable = $state("");
+  let newArgs = $state("");
+  let newUrl = $state("");
+  let newCoverUrl = $state("");
+  let pendingRemoval = $state<GameEntry | null>(null);
 
   let visibleGames = $derived(
     filterLibraryGames(snapshot?.games ?? [], query, filter, platformNames),
@@ -143,6 +168,146 @@
     }
   }
 
+  async function openInstallFolder(game: GameEntry) {
+    actionError = "";
+    try {
+      await invoke("open_install_dir", { id: game.id });
+    } catch (error) {
+      const code =
+        typeof error === "object" && error !== null && "code" in error
+          ? String(error.code)
+          : "";
+      actionError =
+        errorMessages[code] ??
+        (code === "noInstallDir"
+          ? "No install folder is available for this game."
+          : "The install folder couldn't be opened.");
+    }
+  }
+
+  function openAddGame() {
+    newPlatform = "local";
+    newTitle = "";
+    newExecutable = "";
+    newArgs = "";
+    newUrl = "";
+    newCoverUrl = "";
+    dialogError = "";
+    activeDialog = "add";
+  }
+
+  async function chooseExecutable() {
+    const selected = await openFileDialog({
+      directory: false,
+      multiple: false,
+    });
+    if (typeof selected === "string") newExecutable = selected;
+  }
+
+  async function addCustomGame(event: SubmitEvent) {
+    event.preventDefault();
+    if (savingDialog) return;
+    savingDialog = true;
+    dialogError = "";
+    try {
+      const added = await invoke<GameEntry>("add_custom_game", {
+        input: {
+          platform: newPlatform,
+          title: newTitle,
+          executable: newPlatform === "local" ? newExecutable : null,
+          args: newPlatform === "local" ? newArgs.trim().split(/\s+/).filter(Boolean) : [],
+          url: newPlatform === "local" ? null : newUrl,
+          coverUrl: newCoverUrl || null,
+        },
+      });
+      if (snapshot) snapshot = { ...snapshot, games: [...snapshot.games, added] };
+      activeDialog = null;
+      notice = `${added.title} was added to your library.`;
+    } catch (error) {
+      const code =
+        typeof error === "object" && error !== null && "code" in error
+          ? String(error.code)
+          : "";
+      dialogError =
+        errorMessages[code] ??
+        ({
+          titleRequired: "Enter a name for this game.",
+          titleTooLong: "Game names must be 200 characters or fewer.",
+          executableRequired: "Choose the game's executable.",
+          executableNotAbsolute: "Choose an executable using its full path.",
+          executableNotFound: "The selected executable could not be found.",
+          urlRequired: "Enter the game's cloud service link.",
+          urlNotHttps: "The cloud game link must start with https://.",
+          urlHostNotAllowed: "That link does not match the selected cloud service.",
+          invalidCoverUrl: "The cover image link must start with https://.",
+          unsupportedPlatform: "That platform cannot be added as a custom game.",
+        }[code] ?? "The game couldn't be added. Check the details and try again.");
+    } finally {
+      savingDialog = false;
+    }
+  }
+
+  async function removeCustomGame() {
+    if (!pendingRemoval || savingDialog) return;
+    savingDialog = true;
+    dialogError = "";
+    try {
+      const removed = await invoke<boolean>("remove_custom_game", { id: pendingRemoval.id });
+      if (!removed) throw new Error("Game was not found");
+      if (snapshot) {
+        snapshot = {
+          ...snapshot,
+          games: snapshot.games.filter((game) => game.id !== pendingRemoval?.id),
+        };
+      }
+      notice = `${pendingRemoval.title} was removed from your library. Its files were not deleted.`;
+      pendingRemoval = null;
+    } catch {
+      dialogError = "The game couldn't be removed. Please try again.";
+    } finally {
+      savingDialog = false;
+    }
+  }
+
+  async function openSettings() {
+    dialogError = "";
+    activeDialog = "settings";
+    savingDialog = true;
+    try {
+      settings = await invoke<Settings>("get_settings");
+    } catch {
+      dialogError = "Settings couldn't be loaded. Please try again.";
+      activeDialog = null;
+    } finally {
+      savingDialog = false;
+    }
+  }
+
+  function togglePlatform(platform: Platform) {
+    if (!settings) return;
+    const disabled = new Set(settings.disabledPlatforms);
+    if (disabled.has(platform)) disabled.delete(platform);
+    else disabled.add(platform);
+    settings = { ...settings, disabledPlatforms: [...disabled] };
+  }
+
+  async function saveSettings(event: SubmitEvent) {
+    event.preventDefault();
+    if (!settings || savingDialog) return;
+    savingDialog = true;
+    dialogError = "";
+    try {
+      settings = await invoke<Settings>("update_settings", { settings });
+      activeDialog = null;
+      await loadLibrary(true);
+      notice = "Settings saved.";
+    } catch {
+      dialogError = "Settings couldn't be saved. Please try again.";
+    } finally {
+      savingDialog = false;
+    }
+  }
+
   function formatScanTime(seconds: number) {
     if (!seconds) return "Not scanned yet";
     return new Intl.DateTimeFormat(undefined, {
@@ -177,6 +342,14 @@
     </button>
     <button class:active={filter === "hidden"} class="nav-link" onclick={() => (filter = "hidden")}>
       <span class="nav-icon" aria-hidden="true">◌</span>Hidden
+    </button>
+
+    <div class="sidebar-label tools-label">Manage</div>
+    <button class="nav-link" onclick={openAddGame}>
+      <span class="nav-icon" aria-hidden="true">＋</span>Add game
+    </button>
+    <button class="nav-link" onclick={openSettings}>
+      <span class="nav-icon" aria-hidden="true">⚙</span>Settings
     </button>
 
     <div class="sidebar-footer">
@@ -357,6 +530,25 @@
               >
                 {game.hidden ? "◉" : "⊘"}
               </button>
+              {#if game.custom}
+                <button
+                  class="remove-button"
+                  onclick={() => {
+                    dialogError = "";
+                    pendingRemoval = game;
+                  }}
+                  aria-label={`Remove ${game.title} from library`}
+                  title="Remove from library"
+                >×</button>
+              {/if}
+              {#if game.installDir}
+                <button
+                  class="folder-button"
+                  onclick={() => openInstallFolder(game)}
+                  aria-label={`Open install folder for ${game.title}`}
+                  title="Open install folder"
+                >↗</button>
+              {/if}
               <div class="cover-shade"></div>
             </div>
             <div class="game-info">
@@ -395,6 +587,138 @@
     {/if}
   </main>
 </div>
+
+{#if activeDialog === "add"}
+  <div class="modal-backdrop">
+    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="add-title">
+      <div class="modal-heading">
+        <div>
+          <p class="eyebrow">PERSONAL LIBRARY</p>
+          <h2 id="add-title">Add a game</h2>
+        </div>
+        <button class="message-dismiss" onclick={() => (activeDialog = null)} aria-label="Close">×</button>
+      </div>
+      <form onsubmit={addCustomGame}>
+        <label class="form-field">
+          <span>Game type</span>
+          <select bind:value={newPlatform}>
+            <option value="local">Local game</option>
+            <option value="geforce-now">GeForce NOW shortcut</option>
+            <option value="xcloud">Xbox Cloud Gaming shortcut</option>
+          </select>
+        </label>
+        <label class="form-field">
+          <span>Name</span>
+          <input bind:value={newTitle} maxlength="200" required placeholder="Game name" />
+        </label>
+        {#if newPlatform === "local"}
+          <div class="form-field">
+            <span>Executable</span>
+            <div class="file-picker">
+              <input value={newExecutable} readonly placeholder="Choose the game executable" />
+              <button class="secondary-button" type="button" onclick={chooseExecutable}>Browse…</button>
+            </div>
+          </div>
+          <label class="form-field">
+            <span>Launch arguments <small>Optional, separated by spaces</small></span>
+            <input bind:value={newArgs} placeholder="-windowed" />
+          </label>
+        {:else}
+          <label class="form-field">
+            <span>Game link</span>
+            <input
+              bind:value={newUrl}
+              type="url"
+              required
+              placeholder={newPlatform === "xcloud" ? "https://www.xbox.com/play/…" : "https://play.geforcenow.com/…"}
+            />
+          </label>
+        {/if}
+        <label class="form-field">
+          <span>Cover image URL <small>Optional, HTTPS only</small></span>
+          <input bind:value={newCoverUrl} type="url" placeholder="https://…" />
+        </label>
+        {#if dialogError}<p class="form-error" role="alert">{dialogError}</p>{/if}
+        <div class="modal-actions">
+          <button class="secondary-button" type="button" onclick={() => (activeDialog = null)}>Cancel</button>
+          <button class="primary-button" type="submit" disabled={savingDialog}>
+            {savingDialog ? "Adding…" : "Add to library"}
+          </button>
+        </div>
+      </form>
+    </section>
+  </div>
+{:else if activeDialog === "settings"}
+  <div class="modal-backdrop">
+    <section class="modal settings-modal" role="dialog" aria-modal="true" aria-labelledby="settings-title">
+      <div class="modal-heading">
+        <div>
+          <p class="eyebrow">PREFERENCES</p>
+          <h2 id="settings-title">Settings</h2>
+        </div>
+        <button class="message-dismiss" onclick={() => (activeDialog = null)} aria-label="Close">×</button>
+      </div>
+      {#if !settings && savingDialog}
+        <div class="settings-loading" role="status">Loading settings…</div>
+      {:else if settings}
+        <form onsubmit={saveSettings}>
+          <fieldset class="platform-options">
+            <legend>Enabled libraries</legend>
+            <p class="field-hint">Disabled libraries are not scanned or shown in your collection.</p>
+            {#each Object.entries(platformNames) as [platform, name]}
+              <label class="platform-option">
+                <span>{name}</span>
+                <input
+                  type="checkbox"
+                  checked={!settings.disabledPlatforms.includes(platform as Platform)}
+                  onchange={() => togglePlatform(platform as Platform)}
+                />
+              </label>
+            {/each}
+          </fieldset>
+          <label class="platform-option preference-option">
+            <span>Minimize the launcher when a game starts</span>
+            <input
+              type="checkbox"
+              checked={settings.minimizeOnLaunch}
+              onchange={(event) =>
+                (settings = { ...settings!, minimizeOnLaunch: event.currentTarget.checked })}
+            />
+          </label>
+          {#if dialogError}<p class="form-error" role="alert">{dialogError}</p>{/if}
+          <div class="modal-actions">
+            <button class="secondary-button" type="button" onclick={() => (activeDialog = null)}>Cancel</button>
+            <button class="primary-button" type="submit" disabled={savingDialog}>
+              {savingDialog ? "Saving…" : "Save settings"}
+            </button>
+          </div>
+        </form>
+      {/if}
+    </section>
+  </div>
+{/if}
+
+{#if pendingRemoval}
+  <div class="modal-backdrop">
+    <section class="modal confirm-modal" role="alertdialog" aria-modal="true" aria-labelledby="remove-title">
+      <div class="modal-heading">
+        <div>
+          <p class="eyebrow">REMOVE CUSTOM GAME</p>
+          <h2 id="remove-title">Remove {pendingRemoval.title}?</h2>
+        </div>
+        <button class="message-dismiss" onclick={() => (pendingRemoval = null)} aria-label="Close">×</button>
+      </div>
+      <p class="field-hint">This removes the entry from your library only. Files on disk are not deleted.</p>
+      {#if dialogError}<p class="form-error" role="alert">{dialogError}</p>{/if}
+      <div class="modal-actions">
+        <button class="secondary-button" onclick={() => (pendingRemoval = null)}>Cancel</button>
+        <button class="danger-button" onclick={removeCustomGame} disabled={savingDialog}>
+          {savingDialog ? "Removing…" : "Remove game"}
+        </button>
+      </div>
+    </section>
+  </div>
+{/if}
 
 <style>
   :global(*) {
@@ -488,6 +812,10 @@
     font-weight: 700;
     letter-spacing: 1.3px;
     text-transform: uppercase;
+  }
+
+  .tools-label {
+    margin-top: 31px;
   }
 
   .nav-link {
@@ -915,6 +1243,48 @@
     padding: 10px 1px 0;
   }
 
+  .remove-button {
+    position: absolute;
+    top: 45px;
+    left: 8px;
+    display: grid;
+    width: 30px;
+    height: 30px;
+    place-items: center;
+    border: 1px solid #ffffff24;
+    border-radius: 50%;
+    background: #141519c9;
+    color: #fff;
+    cursor: pointer;
+    font-size: 19px;
+    backdrop-filter: blur(7px);
+  }
+
+  .remove-button:hover {
+    color: #ff8999;
+  }
+
+  .folder-button {
+    position: absolute;
+    top: 81px;
+    right: 8px;
+    display: grid;
+    width: 30px;
+    height: 30px;
+    place-items: center;
+    border: 1px solid #ffffff24;
+    border-radius: 50%;
+    background: #141519c9;
+    color: #fff;
+    cursor: pointer;
+    font-size: 15px;
+    backdrop-filter: blur(7px);
+  }
+
+  .folder-button:hover {
+    color: #bafc54;
+  }
+
   .game-copy {
     min-width: 0;
   }
@@ -1046,6 +1416,179 @@
     clip-path: inset(50%);
   }
 
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 5;
+    display: grid;
+    overflow-y: auto;
+    place-items: center;
+    padding: 24px;
+    background: #08090bd9;
+    backdrop-filter: blur(5px);
+  }
+
+  .modal {
+    width: min(100%, 480px);
+    max-height: min(88vh, 760px);
+    overflow-y: auto;
+    padding: 24px;
+    border: 1px solid #383a40;
+    border-radius: 13px;
+    background: #191a1e;
+    box-shadow: 0 24px 90px #0009;
+  }
+
+  .settings-modal {
+    width: min(100%, 540px);
+  }
+
+  .confirm-modal {
+    width: min(100%, 430px);
+  }
+
+  .modal-heading {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 22px;
+  }
+
+  .modal-heading .eyebrow {
+    margin-bottom: 5px;
+  }
+
+  .modal-heading h2 {
+    margin: 0;
+    font-size: 21px;
+    letter-spacing: -0.5px;
+  }
+
+  .form-field {
+    display: grid;
+    gap: 7px;
+    margin: 0 0 15px;
+    color: #d6d7da;
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .form-field small {
+    margin-left: 5px;
+    color: #898b92;
+    font-size: 10px;
+    font-weight: 400;
+  }
+
+  .form-field input,
+  .form-field select {
+    width: 100%;
+    min-height: 39px;
+    padding: 8px 10px;
+    border: 1px solid #383a40;
+    border-radius: 6px;
+    background: #111215;
+    color: #f3f3f5;
+    font-size: 12px;
+  }
+
+  .form-field input::placeholder {
+    color: #777981;
+  }
+
+  .file-picker {
+    display: flex;
+    gap: 8px;
+  }
+
+  .file-picker input {
+    min-width: 0;
+  }
+
+  .file-picker button {
+    flex: 0 0 auto;
+  }
+
+  .modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 9px;
+    margin-top: 22px;
+  }
+
+  .form-error {
+    margin: 8px 0;
+    color: #f0aaaa;
+    font-size: 12px;
+  }
+
+  .platform-options {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 20px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+
+  .platform-options legend {
+    margin-bottom: 4px;
+    color: #e5e6e8;
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  .field-hint {
+    margin: 4px 0 14px;
+    color: #93959c;
+    font-size: 11px;
+    line-height: 1.5;
+  }
+
+  .platform-option {
+    display: flex;
+    min-height: 38px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    border-bottom: 1px solid #292a30;
+    color: #c6c7cb;
+    font-size: 11px;
+  }
+
+  .platform-option input {
+    width: 15px;
+    height: 15px;
+    accent-color: #bafc54;
+  }
+
+  .preference-option {
+    margin-top: 17px;
+    padding: 0 0 12px;
+  }
+
+  .settings-loading {
+    padding: 30px 0;
+    color: #a8a9af;
+    text-align: center;
+  }
+
+  .danger-button {
+    min-height: 37px;
+    padding: 0 13px;
+    border: 1px solid #7a343d;
+    border-radius: 7px;
+    background: #8c3844;
+    color: #fff;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 650;
+  }
+
+  .danger-button:hover {
+    background: #a34250;
+  }
+
   @keyframes spin {
     to {
       transform: rotate(360deg);
@@ -1071,14 +1614,17 @@
       height: 61px;
       flex-direction: row;
       align-items: center;
-      justify-content: space-between;
+      justify-content: flex-start;
+      gap: 5px;
+      overflow-x: auto;
       padding: 0 17px;
       border-right: 0;
       border-bottom: 1px solid #25262b;
     }
 
     .brand {
-      margin: 0;
+      flex: 0 0 auto;
+      margin: 0 auto 0 0;
     }
 
     .brand-mark {
@@ -1087,16 +1633,24 @@
     }
 
     .sidebar-label,
-    .sidebar-footer,
-    .nav-link:not(.active) {
+    .sidebar-footer {
       display: none;
     }
 
-    .nav-link.active {
+    .sidebar .nav-link {
       width: auto;
+      flex: 0 0 auto;
       padding: 8px 10px;
       box-shadow: none;
       font-size: 11px;
+    }
+
+    .sidebar .nav-link.active {
+      background: #222329;
+    }
+
+    .sidebar .nav-icon {
+      display: none;
     }
 
     .main-content {
@@ -1137,6 +1691,27 @@
     .game-grid {
       grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 18px 12px;
+    }
+  }
+
+  @media (max-width: 420px) {
+    .sidebar {
+      gap: 3px;
+      padding: 0 10px;
+    }
+
+    .brand-name {
+      display: none;
+    }
+
+    .sidebar .nav-link {
+      padding: 8px;
+      font-size: 0;
+    }
+
+    .sidebar .nav-icon {
+      display: inline;
+      font-size: 18px;
     }
   }
 </style>
