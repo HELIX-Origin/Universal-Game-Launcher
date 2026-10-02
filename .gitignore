@@ -1,0 +1,28 @@
+.DS_Store
+.vscode/
+Thumbs.db
+
+/node_modules/
+/build/
+/.svelte-kit/
+/package/
+/dist/
+/coverage/
+
+# Rust and Tauri build output
+/target/
+/src-tauri/target/
+
+# Local logs and editor swap files
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+*.swp
+*~
+
+.env
+.env.*
+!.env.example
+vite.config.js.timestamp-*
+vite.config.ts.timestamp-*
