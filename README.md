@@ -1,6 +1,6 @@
 # Universal Game Launcher
 
-A desktop launcher intended to show games from multiple stores in one library. The Rust/Tauri backend reads locally installed clients and their data, keeps user-added games and settings, and delegates launching or installation to the official client. Optional metadata providers can enrich entries; discovery itself does not require a store account or online API.
+A desktop launcher intended to show games from multiple stores in one library. The Rust/Tauri backend reads locally installed clients and their data, keeps user-added games and settings, and delegates launching or installation to the official client. Optional metadata enrichment uses IGDB in place of the discontinued RAWG API; discovery itself does not require a store account or online API.
 
 **Current state:** early work in progress. The backend has store scanners and Tauri commands, but the Svelte page is still the starter greeting screen and does not expose the library. Do not treat the current window as a working game launcher.
 
