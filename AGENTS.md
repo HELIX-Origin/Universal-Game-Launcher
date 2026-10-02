@@ -31,6 +31,8 @@ Choose only the role and skill relevant to the task. The lead coordinates fronte
 
 ## 🔍 Verification
 
-From the repository root, run `npm ci` if dependencies are missing, then use `npm run check` for frontend types, `npm test` for frontend regression tests, and `npm run build` for frontend packaging. For backend changes, run `cargo test` from `src-tauri/`. A packaged desktop build uses `npm run tauri build` and requires the Tauri prerequisites for the operating system.
+From the repository root, run `npm ci` if dependencies are missing. Then run `npm run verify -- <suites|groups>` to choose test layers (`--list` shows the catalog). Use `quick` for fast frontend feedback, `frontend` for types, unit, DOM, contract, and build checks, `backend` for Rust formatting, unit, and integration tests, and `boundary` for both sides of the Rust ↔ TypeScript contracts. The individual commands still work: `npm run check`, `npm test`, `npm run build`, and `cargo test` from `src-tauri/`. [tests/README.md](tests/README.md) describes the layout, helpers, contract workflow, and debugging tips. A packaged desktop build uses `npm run tauri build` and requires the Tauri prerequisites for the operating system.
+
+When a command name, argument, or serialized payload changes, update both sides and run `npm run verify -- boundary`. Regenerate golden fixtures with `--update-contracts` only for intentional payload changes.
 
 Run only checks relevant to the change. State exact commands and outcomes, distinguish source inspection from runtime testing, and report environmental blockers rather than claiming unverified success. Do not add dependencies without need.

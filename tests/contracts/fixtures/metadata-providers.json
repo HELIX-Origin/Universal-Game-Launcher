@@ -1,0 +1,15 @@
+{
+  "all": [
+    "steamGridDb",
+    "steamStore",
+    "igdb",
+    "vndb",
+    "rawg"
+  ],
+  "selectable": [
+    "steamGridDb",
+    "steamStore",
+    "igdb",
+    "vndb"
+  ]
+}

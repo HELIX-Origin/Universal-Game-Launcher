@@ -1,0 +1,32 @@
+{
+  "codes": [
+    "titleRequired",
+    "titleTooLong",
+    "invalidCoverUrl",
+    "executableRequired",
+    "executableNotAbsolute",
+    "executableNotFound",
+    "urlRequired",
+    "urlNotHttps",
+    "urlHostNotAllowed",
+    "unsupportedPlatform",
+    "gameNotFound",
+    "launchFailed",
+    "uriSchemeNotAllowed",
+    "noInstallDir",
+    "storage",
+    "metadataNoProviders",
+    "metadataMissingKey",
+    "metadataRequestFailed",
+    "metadataNotFound",
+    "internal"
+  ],
+  "withDetail": {
+    "code": "storage",
+    "detail": "synthetic detail"
+  },
+  "withoutDetail": {
+    "code": "gameNotFound",
+    "detail": null
+  }
+}

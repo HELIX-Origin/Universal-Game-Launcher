@@ -6,7 +6,8 @@ use std::path::PathBuf;
 /// Every storefront / source the launcher knows about.
 ///
 /// Serialized as kebab-case strings (e.g. `"epic"`, `"geforce-now"`), which is
-/// the exact value used by the TypeScript `Platform` union in `src/lib/types.ts`.
+/// the exact value used by the TypeScript `Platform` union in `src/lib/library.ts`
+/// (enforced by `tests/contracts/`).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, PartialOrd, Ord)]
 #[serde(rename_all = "kebab-case")]
 pub enum Platform {

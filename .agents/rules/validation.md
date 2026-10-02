@@ -4,8 +4,10 @@ Choose checks that match the files and behavior changed. Record exact commands, 
 
 ## 🔧 Existing project checks
 
-- **Frontend:** Run `npm run check`, `npm test`, and `npm run build` from the repository root.
-- **Backend:** Run `cargo test` from `src-tauri/`.
+- **Runner:** `npm run verify -- <suites|groups>` runs selected layers and prints a summary. A suite whose tool is missing is reported as unavailable, not passed. See [tests/README.md](../../tests/README.md).
+- **Frontend:** Run `npm run verify -- frontend`. This runs `npm run check`, the unit, DOM, and contract Vitest projects, and `npm run build`.
+- **Backend:** Run `npm run verify -- backend`. This runs `cargo fmt --check`, `cargo test --lib`, and `cargo test --test '*'` in `src-tauri/`. Add `rust-clippy` for lints.
+- **Command or payload boundary:** Run `npm run verify -- boundary`. Regenerate golden payloads with `--update-contracts` only for intentional changes, and review the fixture diff.
 - **Desktop behavior:** A desktop smoke test requires Tauri system prerequisites and relevant real client installations.
 - **Documentation only:** Check referenced paths, links, and claims against the current tree; application builds are not required.
 

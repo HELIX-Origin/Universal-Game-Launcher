@@ -16,7 +16,7 @@ pub struct AppError {
 }
 
 /// Keep in sync with the `errors` section of `src/lib/i18n/locales/en.ts`
-/// (enforced by `src/lib/i18n/i18n.test.ts`).
+/// (enforced by `tests/contracts/enums.test.ts`).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub enum ErrorCode {

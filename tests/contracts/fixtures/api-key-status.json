@@ -1,0 +1,7 @@
+{
+  "igdbClientId": false,
+  "igdbClientSecret": false,
+  "rawg": true,
+  "steamgriddb": true,
+  "vndb": false
+}

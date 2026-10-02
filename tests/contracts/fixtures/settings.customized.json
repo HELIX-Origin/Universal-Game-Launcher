@@ -1,0 +1,15 @@
+{
+  "disabledPlatforms": [
+    "origin",
+    "battle-net"
+  ],
+  "locale": "en-US",
+  "metadataProviders": [
+    "steamGridDb",
+    "vndb"
+  ],
+  "minimizeOnLaunch": true,
+  "steamPath": "/synthetic/steam",
+  "theme": "light",
+  "viewMode": "list"
+}

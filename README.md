@@ -42,10 +42,11 @@ npm run tauri dev
 ### 🔍 What the checks cover
 
 - `npm run check` checks the frontend types.
-- `npm test` runs frontend library, initial-state, and English-catalog regression tests.
+- `npm test` runs the frontend unit, DOM interaction (mocked Tauri IPC), and Rust ↔ TypeScript contract test projects.
+- `npm run verify -- <suites|groups>` runs selected frontend and backend test layers and prints a summary. Use `npm run verify -- --list` to see the catalog, and see [tests/README.md](tests/README.md) for details.
 - `npm run build` packages the web frontend; it does not package the desktop application.
 - `npm run tauri dev` starts the desktop application and requires the Tauri system prerequisites.
-- To test the Rust backend, run `cargo test` from `src-tauri/`.
+- To test the Rust backend, run `cargo test` from `src-tauri/` or `npm run verify -- backend`.
 - To package the desktop application, run `npm run tauri build`.
 
 Frontend unit tests do not replace a desktop smoke test. Report commands that could not run instead of treating them as successful.

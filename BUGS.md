@@ -4,7 +4,13 @@ This is the canonical record of bugs tracked in this repository. Record each con
 
 ## 🟢 Open bugs
 
-No open, confirmed bugs are currently recorded.
+### B-04 — Settings load failure shows no message
+
+- **Affected area:** `openSettings` in `src/routes/+page.svelte`.
+- **Reproduction:** Open Settings while `get_settings` or `get_api_key_status` rejects. Reproduced with mocked IPC in `tests/dom/settings-dialog.dom.test.ts` (`it.fails` case "reports an error when settings cannot be loaded (B-04)").
+- **Expected:** A visible error says that settings couldn't be loaded.
+- **Actual:** The handler stores `page.settingsLoadError` in `dialogError` and then closes the dialog. `dialogError` is rendered only inside dialogs, so the user sees nothing.
+- **Status:** Open. When fixed, change the `it.fails` test to `it`.
 
 Desktop runtime behavior, metadata network calls, and store/client handoffs have not been smoke-tested in this environment. These are verification gaps, not confirmed defects; track the required checks in [TODO.md](TODO.md).
 

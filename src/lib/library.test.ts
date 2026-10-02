@@ -1,45 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { filterLibraryGames, gameActionCommand, type GameEntry, type Platform } from "./library";
+import { makeGame, platformNames } from "../../tests/helpers/fixtures";
+import { filterLibraryGames, gameActionCommand } from "./library";
 
-const platformNames: Record<Platform, string> = {
-  steam: "Steam",
-  epic: "Epic Games",
-  gog: "GOG",
-  humble: "Humble",
-  itch: "itch.io",
-  ubisoft: "Ubisoft Connect",
-  ea: "EA",
-  origin: "Origin",
-  xbox: "Xbox",
-  amazon: "Amazon Games",
-  "battle-net": "Battle.net",
-  lutris: "Lutris",
-  "geforce-now": "GeForce NOW",
-  xcloud: "Xbox Cloud Gaming",
-  local: "Local games",
-};
-
-function game(
-  id: string,
-  title: string,
-  options: Partial<GameEntry> = {},
-): GameEntry {
-  return {
-    id,
-    title,
-    platform: "steam",
-    installed: true,
-    install: null,
-    coverUrl: null,
-    heroUrl: null,
-    installDir: null,
-    metadata: null,
-    favorite: false,
-    hidden: false,
-    custom: false,
-    ...options,
-  };
-}
+const game = makeGame;
 
 describe("filterLibraryGames", () => {
   const games = [
